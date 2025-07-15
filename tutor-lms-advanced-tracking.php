@@ -68,6 +68,7 @@ class TutorAdvancedTracking {
         require_once TUTOR_ADVANCED_TRACKING_PLUGIN_DIR . 'includes/class-dashboard.php';
         require_once TUTOR_ADVANCED_TRACKING_PLUGIN_DIR . 'includes/class-course-stats.php';
         require_once TUTOR_ADVANCED_TRACKING_PLUGIN_DIR . 'includes/class-user-stats.php';
+        require_once TUTOR_ADVANCED_TRACKING_PLUGIN_DIR . 'includes/class-advanced-analytics.php';
     }
     
     /**
@@ -78,6 +79,7 @@ class TutorAdvancedTracking {
         new TutorAdvancedTracking_Dashboard();
         new TutorAdvancedTracking_CourseStats();
         new TutorAdvancedTracking_UserStats();
+        new TutorAdvancedTracking_AdvancedAnalytics();
     }
     
     /**

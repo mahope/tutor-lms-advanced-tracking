@@ -534,6 +534,665 @@
     padding: 20px;
 }
 
+/* Advanced Analytics Styles */
+.tutor-advanced-analytics {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 20px;
+}
+
+.analytics-header {
+    margin-bottom: 30px;
+    border-bottom: 2px solid #e9ecef;
+    padding-bottom: 20px;
+}
+
+.analytics-nav ul {
+    list-style: none;
+    padding: 0;
+    margin: 20px 0 0 0;
+    display: flex;
+    gap: 20px;
+    flex-wrap: wrap;
+}
+
+.analytics-nav .nav-link {
+    padding: 10px 20px;
+    background: #f8f9fa;
+    border: 1px solid #dee2e6;
+    border-radius: 5px;
+    text-decoration: none;
+    color: #495057;
+    transition: all 0.3s;
+}
+
+.analytics-nav .nav-link:hover,
+.analytics-nav .nav-link.active {
+    background: #007cba;
+    color: white;
+    border-color: #007cba;
+}
+
+.analytics-section {
+    margin-bottom: 40px;
+    padding: 30px;
+    background: #fff;
+    border-radius: 8px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.analytics-section h3 {
+    color: #2c3e50;
+    margin: 0 0 20px 0;
+    font-size: 24px;
+}
+
+/* Completion Funnel */
+.funnel-container {
+    max-width: 800px;
+    margin: 0 auto;
+}
+
+.funnel-step {
+    margin-bottom: 20px;
+    padding: 15px;
+    background: #f8f9fa;
+    border-radius: 8px;
+    border: 1px solid #dee2e6;
+}
+
+.funnel-step-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 10px;
+}
+
+.funnel-step-header h4 {
+    margin: 0;
+    color: #2c3e50;
+}
+
+.funnel-percentage {
+    font-size: 18px;
+    font-weight: bold;
+    color: #007cba;
+}
+
+.funnel-bar {
+    height: 20px;
+    background: #e9ecef;
+    border-radius: 10px;
+    overflow: hidden;
+    margin-bottom: 10px;
+}
+
+.funnel-fill {
+    height: 100%;
+    background: linear-gradient(90deg, #007cba, #0056b3);
+    transition: width 0.5s ease;
+}
+
+.funnel-stats {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-size: 14px;
+    color: #6c757d;
+}
+
+.drop-rate {
+    color: #dc3545;
+}
+
+/* Engagement Metrics */
+.engagement-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    gap: 20px;
+}
+
+.engagement-card {
+    background: #f8f9fa;
+    padding: 20px;
+    border-radius: 8px;
+    border: 1px solid #dee2e6;
+    text-align: center;
+}
+
+.engagement-score-circle {
+    margin-bottom: 15px;
+}
+
+.score-value {
+    font-size: 48px;
+    font-weight: bold;
+    color: #007cba;
+}
+
+.score-label {
+    font-size: 14px;
+    color: #6c757d;
+    margin-top: 5px;
+}
+
+.engagement-level {
+    padding: 5px 15px;
+    border-radius: 20px;
+    font-weight: bold;
+    text-transform: uppercase;
+    font-size: 12px;
+    letter-spacing: 1px;
+}
+
+.engagement-level.excellent {
+    background: #d4edda;
+    color: #155724;
+}
+
+.engagement-level.good {
+    background: #d1ecf1;
+    color: #0c5460;
+}
+
+.engagement-level.average {
+    background: #fff3cd;
+    color: #856404;
+}
+
+.engagement-level.poor {
+    background: #f8d7da;
+    color: #721c24;
+}
+
+.engagement-level.critical {
+    background: #f5c6cb;
+    color: #721c24;
+}
+
+.metric-value {
+    font-size: 24px;
+    font-weight: bold;
+    color: #2c3e50;
+    margin-top: 10px;
+}
+
+/* Time Analytics */
+.time-analytics-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 20px;
+    margin-bottom: 30px;
+}
+
+.time-card {
+    background: #f8f9fa;
+    padding: 20px;
+    border-radius: 8px;
+    border: 1px solid #dee2e6;
+    text-align: center;
+}
+
+.time-card h4 {
+    margin: 0 0 10px 0;
+    color: #6c757d;
+    font-size: 14px;
+}
+
+.peak-value {
+    font-size: 24px;
+    font-weight: bold;
+    color: #007cba;
+}
+
+.time-charts {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
+    gap: 30px;
+}
+
+.chart-container {
+    background: #f8f9fa;
+    padding: 20px;
+    border-radius: 8px;
+    border: 1px solid #dee2e6;
+}
+
+.chart-container h4 {
+    margin: 0 0 20px 0;
+    color: #2c3e50;
+    text-align: center;
+}
+
+.daily-chart {
+    display: flex;
+    justify-content: space-between;
+    align-items: end;
+    height: 200px;
+    padding: 20px;
+}
+
+.day-bar {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    width: 40px;
+}
+
+.bar-fill {
+    width: 30px;
+    background: #007cba;
+    border-radius: 3px 3px 0 0;
+    margin-bottom: 5px;
+    min-height: 5px;
+}
+
+.day-label {
+    font-size: 12px;
+    color: #6c757d;
+    margin-bottom: 5px;
+}
+
+.day-count {
+    font-size: 10px;
+    color: #6c757d;
+}
+
+.hourly-chart {
+    display: flex;
+    justify-content: space-between;
+    align-items: end;
+    height: 200px;
+    padding: 20px;
+}
+
+.hour-bar {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    width: 15px;
+}
+
+.hour-label {
+    font-size: 10px;
+    color: #6c757d;
+    margin-top: 5px;
+    transform: rotate(-45deg);
+}
+
+/* Difficulty Analysis */
+.difficulty-table {
+    background: #fff;
+    border-radius: 8px;
+    overflow: hidden;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.difficulty-badge {
+    padding: 3px 8px;
+    border-radius: 12px;
+    font-size: 11px;
+    font-weight: bold;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.difficulty-badge.very-easy {
+    background: #d4edda;
+    color: #155724;
+}
+
+.difficulty-badge.easy {
+    background: #d1ecf1;
+    color: #0c5460;
+}
+
+.difficulty-badge.medium {
+    background: #fff3cd;
+    color: #856404;
+}
+
+.difficulty-badge.hard {
+    background: #f8d7da;
+    color: #721c24;
+}
+
+.difficulty-badge.very-hard {
+    background: #f5c6cb;
+    color: #721c24;
+}
+
+/* Dropout Patterns */
+.dropout-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 20px;
+    margin-bottom: 30px;
+}
+
+.dropout-card {
+    background: #f8f9fa;
+    padding: 20px;
+    border-radius: 8px;
+    border: 1px solid #dee2e6;
+    text-align: center;
+}
+
+.dropout-card.total {
+    background: #fff3cd;
+    border-color: #ffeaa7;
+}
+
+.dropout-card h4 {
+    margin: 0 0 10px 0;
+    color: #6c757d;
+    font-size: 14px;
+}
+
+.dropout-value {
+    font-size: 32px;
+    font-weight: bold;
+    color: #2c3e50;
+}
+
+.dropout-label {
+    font-size: 12px;
+    color: #6c757d;
+    margin-top: 5px;
+}
+
+.retention-strategies {
+    background: #f8f9fa;
+    padding: 20px;
+    border-radius: 8px;
+    border: 1px solid #dee2e6;
+}
+
+.retention-strategies h4 {
+    margin: 0 0 15px 0;
+    color: #2c3e50;
+}
+
+.retention-strategies ul {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+}
+
+.retention-strategies li {
+    padding: 8px 0;
+    border-bottom: 1px solid #dee2e6;
+    color: #495057;
+}
+
+.retention-strategies li:last-child {
+    border-bottom: none;
+}
+
+.retention-strategies li:before {
+    content: "→";
+    color: #007cba;
+    margin-right: 10px;
+}
+
+/* Predictive Analytics */
+.predictive-overview {
+    margin-bottom: 30px;
+}
+
+.risk-distribution {
+    background: #f8f9fa;
+    padding: 20px;
+    border-radius: 8px;
+    border: 1px solid #dee2e6;
+}
+
+.risk-distribution h4 {
+    margin: 0 0 15px 0;
+    color: #2c3e50;
+}
+
+.risk-bars {
+    display: flex;
+    gap: 20px;
+    justify-content: space-between;
+}
+
+.risk-bar {
+    flex: 1;
+    text-align: center;
+    padding: 15px;
+    border-radius: 8px;
+}
+
+.risk-bar.high-risk {
+    background: #f8d7da;
+    color: #721c24;
+}
+
+.risk-bar.medium-risk {
+    background: #fff3cd;
+    color: #856404;
+}
+
+.risk-bar.low-risk {
+    background: #d4edda;
+    color: #155724;
+}
+
+.risk-label {
+    display: block;
+    font-size: 14px;
+    font-weight: bold;
+    margin-bottom: 5px;
+}
+
+.risk-count {
+    font-size: 24px;
+    font-weight: bold;
+}
+
+.risk-students-table {
+    background: #fff;
+    border-radius: 8px;
+    overflow: hidden;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.risk-score {
+    padding: 3px 8px;
+    border-radius: 12px;
+    font-size: 12px;
+    font-weight: bold;
+}
+
+.risk-score.high {
+    background: #f8d7da;
+    color: #721c24;
+}
+
+.risk-score.medium {
+    background: #fff3cd;
+    color: #856404;
+}
+
+.risk-score.low {
+    background: #d4edda;
+    color: #155724;
+}
+
+.completion-probability {
+    font-weight: bold;
+    color: #007cba;
+}
+
+.recommended-actions {
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+}
+
+.action-item {
+    padding: 2px 6px;
+    background: #e9ecef;
+    border-radius: 3px;
+    font-size: 11px;
+    color: #495057;
+}
+
+.intervention-priorities {
+    margin-top: 30px;
+}
+
+.priorities-list {
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+}
+
+.priority-item {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+    padding: 15px;
+    border-radius: 8px;
+    border: 1px solid #dee2e6;
+}
+
+.priority-item.high {
+    background: #f8d7da;
+    border-color: #f5c6cb;
+}
+
+.priority-item.medium {
+    background: #fff3cd;
+    border-color: #ffeaa7;
+}
+
+.priority-item.low {
+    background: #d4edda;
+    border-color: #c3e6cb;
+}
+
+.priority-badge {
+    padding: 5px 10px;
+    border-radius: 15px;
+    font-size: 11px;
+    font-weight: bold;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    white-space: nowrap;
+    background: rgba(0, 0, 0, 0.1);
+}
+
+.priority-content {
+    flex: 1;
+}
+
+.priority-content strong {
+    color: #2c3e50;
+}
+
+.priority-content p {
+    margin: 5px 0 0 0;
+    color: #6c757d;
+    font-size: 14px;
+}
+
+/* Cohorts Table */
+.cohorts-table {
+    background: #fff;
+    border-radius: 8px;
+    overflow: hidden;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.completion-rate.good {
+    background: #d4edda;
+    color: #155724;
+    padding: 3px 8px;
+    border-radius: 12px;
+    font-size: 12px;
+    font-weight: bold;
+}
+
+.completion-rate.average {
+    background: #fff3cd;
+    color: #856404;
+    padding: 3px 8px;
+    border-radius: 12px;
+    font-size: 12px;
+    font-weight: bold;
+}
+
+.completion-rate.poor {
+    background: #f8d7da;
+    color: #721c24;
+    padding: 3px 8px;
+    border-radius: 12px;
+    font-size: 12px;
+    font-weight: bold;
+}
+
+.trend {
+    padding: 3px 8px;
+    border-radius: 12px;
+    font-size: 12px;
+    font-weight: bold;
+}
+
+.trend.improving {
+    background: #d4edda;
+    color: #155724;
+}
+
+.trend.stable {
+    background: #fff3cd;
+    color: #856404;
+}
+
+.trend.declining {
+    background: #f8d7da;
+    color: #721c24;
+}
+
+/* Export Options */
+.analytics-export {
+    margin-top: 40px;
+    padding: 30px;
+    background: #f8f9fa;
+    border-radius: 8px;
+    border: 1px solid #dee2e6;
+}
+
+.analytics-export h3 {
+    margin: 0 0 20px 0;
+    color: #2c3e50;
+}
+
+.export-buttons {
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+}
+
+.no-risk-students,
+.no-interventions {
+    text-align: center;
+    padding: 40px;
+    color: #6c757d;
+}
+
+/* Course Actions */
+.course-actions {
+    margin-top: 15px;
+}
+
+.course-actions .btn {
+    margin-right: 10px;
+}
+
 /* Responsive Design */
 @media (max-width: 768px) {
     .dashboard-stats-overview,
@@ -562,5 +1221,39 @@
         flex-direction: column;
         align-items: flex-start;
         gap: 10px;
+    }
+    
+    .analytics-nav ul {
+        flex-direction: column;
+        gap: 10px;
+    }
+    
+    .engagement-grid,
+    .time-analytics-grid,
+    .dropout-grid {
+        grid-template-columns: 1fr;
+    }
+    
+    .time-charts {
+        grid-template-columns: 1fr;
+    }
+    
+    .risk-bars {
+        flex-direction: column;
+        gap: 10px;
+    }
+    
+    .priority-item {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 10px;
+    }
+    
+    .export-buttons {
+        flex-direction: column;
+    }
+    
+    .export-buttons .btn {
+        width: 100%;
     }
 }

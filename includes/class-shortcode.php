@@ -97,6 +97,9 @@ class TutorAdvancedTracking_Shortcode {
             case 'user':
                 $this->render_user_view($atts['user_id']);
                 break;
+            case 'analytics':
+                $this->render_analytics_view($atts['course_id']);
+                break;
             default:
                 $this->render_dashboard_view();
                 break;
@@ -152,5 +155,22 @@ class TutorAdvancedTracking_Shortcode {
         }
         
         include TUTOR_ADVANCED_TRACKING_PLUGIN_DIR . 'templates/user-details.php';
+    }
+    
+    /**
+     * Render analytics view
+     */
+    private function render_analytics_view($course_id) {
+        $analytics = new TutorAdvancedTracking_AdvancedAnalytics();
+        $analytics_data = $analytics->get_course_analytics($course_id);
+        
+        if (!$analytics_data) {
+            echo '<div class="tutor-advanced-tracking-error">' . 
+                 __('Analytics data not available or you do not have permission to view it.', 'tutor-lms-advanced-tracking') . 
+                 '</div>';
+            return;
+        }
+        
+        include TUTOR_ADVANCED_TRACKING_PLUGIN_DIR . 'templates/advanced-analytics.php';
     }
 }

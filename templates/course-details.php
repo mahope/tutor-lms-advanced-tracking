@@ -23,6 +23,13 @@ if (!isset($course_data) || !$course_data) {
         
         <h2><?php echo esc_html($course_data['title']); ?></h2>
         <p class="course-instructor"><?php _e('Instructor:', 'tutor-lms-advanced-tracking'); ?> <?php echo esc_html($course_data['instructor']); ?></p>
+        
+        <div class="course-actions">
+            <a href="<?php echo esc_url(add_query_arg(array('view' => 'analytics', 'course_id' => intval($course_data['id'])), get_permalink())); ?>" 
+               class="btn btn-primary">
+                <?php _e('View Advanced Analytics', 'tutor-lms-advanced-tracking'); ?>
+            </a>
+        </div>
     </div>
 
     <div class="course-stats-overview">
