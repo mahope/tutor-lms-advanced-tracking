@@ -48,7 +48,7 @@ class TutorAdvancedTracking_Shortcode {
             // Localize script for AJAX
             wp_localize_script('tutor-advanced-tracking-script', 'tutorAdvancedTracking', array(
                 'ajaxurl' => admin_url('admin-ajax.php'),
-                'nonce' => wp_create_nonce('tutor_advanced_tracking_nonce')
+                'nonce' => wp_create_nonce('tutor_advanced_tracking_search_' . get_current_user_id())
             ));
         }
     }

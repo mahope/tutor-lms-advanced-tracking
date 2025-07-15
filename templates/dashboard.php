@@ -30,22 +30,22 @@ $courses = $dashboard->get_courses();
     <div class="dashboard-stats-overview">
         <div class="stats-card">
             <h3><?php _e('Total Courses', 'tutor-lms-advanced-tracking'); ?></h3>
-            <div class="stats-number"><?php echo count($courses); ?></div>
+            <div class="stats-number"><?php echo esc_html(count($courses)); ?></div>
         </div>
         
         <div class="stats-card">
             <h3><?php _e('Total Students', 'tutor-lms-advanced-tracking'); ?></h3>
-            <div class="stats-number"><?php echo array_sum(array_column($courses, 'student_count')); ?></div>
+            <div class="stats-number"><?php echo esc_html(array_sum(array_column($courses, 'student_count'))); ?></div>
         </div>
         
         <div class="stats-card">
             <h3><?php _e('Average Progression', 'tutor-lms-advanced-tracking'); ?></h3>
-            <div class="stats-number"><?php echo $courses ? round(array_sum(array_column($courses, 'avg_progression')) / count($courses), 1) : 0; ?>%</div>
+            <div class="stats-number"><?php echo esc_html($courses ? round(array_sum(array_column($courses, 'avg_progression')) / count($courses), 1) : 0); ?>%</div>
         </div>
         
         <div class="stats-card">
             <h3><?php _e('Average Quiz Score', 'tutor-lms-advanced-tracking'); ?></h3>
-            <div class="stats-number"><?php echo $courses ? round(array_sum(array_column($courses, 'avg_quiz_score')) / count($courses), 1) : 0; ?>%</div>
+            <div class="stats-number"><?php echo esc_html($courses ? round(array_sum(array_column($courses, 'avg_quiz_score')) / count($courses), 1) : 0); ?>%</div>
         </div>
     </div>
 
@@ -76,20 +76,20 @@ $courses = $dashboard->get_courses();
                                     <strong><?php echo esc_html($course['title']); ?></strong>
                                 </td>
                                 <td><?php echo esc_html($course['instructor']); ?></td>
-                                <td><?php echo $course['student_count']; ?></td>
+                                <td><?php echo esc_html($course['student_count']); ?></td>
                                 <td>
                                     <div class="progress-bar">
-                                        <div class="progress-fill" style="width: <?php echo $course['avg_progression']; ?>%"></div>
-                                        <span><?php echo $course['avg_progression']; ?>%</span>
+                                        <div class="progress-fill" style="width: <?php echo esc_attr($course['avg_progression']); ?>%"></div>
+                                        <span><?php echo esc_html($course['avg_progression']); ?>%</span>
                                     </div>
                                 </td>
                                 <td>
-                                    <span class="quiz-score <?php echo $course['avg_quiz_score'] >= 70 ? 'passing' : 'failing'; ?>">
-                                        <?php echo $course['avg_quiz_score']; ?>%
+                                    <span class="quiz-score <?php echo esc_attr($course['avg_quiz_score'] >= 70 ? 'passing' : 'failing'); ?>">
+                                        <?php echo esc_html($course['avg_quiz_score']); ?>%
                                     </span>
                                 </td>
                                 <td>
-                                    <a href="<?php echo add_query_arg(array('view' => 'course', 'course_id' => $course['id']), get_permalink()); ?>" 
+                                    <a href="<?php echo esc_url(add_query_arg(array('view' => 'course', 'course_id' => intval($course['id'])), get_permalink())); ?>" 
                                        class="btn btn-primary">
                                         <?php _e('View Details', 'tutor-lms-advanced-tracking'); ?>
                                     </a>

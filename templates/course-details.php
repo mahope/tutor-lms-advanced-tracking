@@ -28,22 +28,22 @@ if (!isset($course_data) || !$course_data) {
     <div class="course-stats-overview">
         <div class="stats-card">
             <h3><?php _e('Total Students', 'tutor-lms-advanced-tracking'); ?></h3>
-            <div class="stats-number"><?php echo $course_data['stats']['total_students']; ?></div>
+            <div class="stats-number"><?php echo esc_html($course_data['stats']['total_students']); ?></div>
         </div>
         
         <div class="stats-card">
             <h3><?php _e('Completed', 'tutor-lms-advanced-tracking'); ?></h3>
-            <div class="stats-number"><?php echo $course_data['stats']['completed_students']; ?></div>
+            <div class="stats-number"><?php echo esc_html($course_data['stats']['completed_students']); ?></div>
         </div>
         
         <div class="stats-card">
             <h3><?php _e('Completion Rate', 'tutor-lms-advanced-tracking'); ?></h3>
-            <div class="stats-number"><?php echo $course_data['stats']['completion_rate']; ?>%</div>
+            <div class="stats-number"><?php echo esc_html($course_data['stats']['completion_rate']); ?>%</div>
         </div>
         
         <div class="stats-card">
             <h3><?php _e('Avg. Completion Time', 'tutor-lms-advanced-tracking'); ?></h3>
-            <div class="stats-number"><?php echo $course_data['stats']['avg_completion_time']; ?> <?php _e('days', 'tutor-lms-advanced-tracking'); ?></div>
+            <div class="stats-number"><?php echo esc_html($course_data['stats']['avg_completion_time']); ?> <?php _e('days', 'tutor-lms-advanced-tracking'); ?></div>
         </div>
     </div>
 
@@ -80,13 +80,13 @@ if (!isset($course_data) || !$course_data) {
                                     </td>
                                     <td>
                                         <div class="progress-bar">
-                                            <div class="progress-fill" style="width: <?php echo $student['progression']; ?>%"></div>
-                                            <span><?php echo $student['progression']; ?>%</span>
+                                            <div class="progress-fill" style="width: <?php echo esc_attr($student['progression']); ?>%"></div>
+                                            <span><?php echo esc_html($student['progression']); ?>%</span>
                                         </div>
                                     </td>
                                     <td>
-                                        <span class="quiz-score <?php echo $student['quiz_average'] >= 70 ? 'passing' : 'failing'; ?>">
-                                            <?php echo $student['quiz_average']; ?>%
+                                        <span class="quiz-score <?php echo esc_attr($student['quiz_average'] >= 70 ? 'passing' : 'failing'); ?>">
+                                            <?php echo esc_html($student['quiz_average']); ?>%
                                         </span>
                                     </td>
                                     <td>
@@ -104,7 +104,7 @@ if (!isset($course_data) || !$course_data) {
                                         </span>
                                     </td>
                                     <td>
-                                        <a href="<?php echo add_query_arg(array('view' => 'user', 'user_id' => $student['id']), get_permalink()); ?>" 
+                                        <a href="<?php echo esc_url(add_query_arg(array('view' => 'user', 'user_id' => intval($student['id'])), get_permalink())); ?>" 
                                            class="btn btn-secondary">
                                             <?php _e('View Details', 'tutor-lms-advanced-tracking'); ?>
                                         </a>
