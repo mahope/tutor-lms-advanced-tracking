@@ -48,7 +48,8 @@ class TutorAdvancedTracking_Shortcode {
             // Localize script for AJAX
             wp_localize_script('tutor-advanced-tracking-script', 'tutorAdvancedTracking', array(
                 'ajaxurl' => admin_url('admin-ajax.php'),
-                'nonce' => wp_create_nonce('tutor_advanced_tracking_search_' . get_current_user_id())
+                'nonce' => wp_create_nonce('tutor_advanced_tracking_search_' . get_current_user_id()),
+                'exportNonce' => wp_create_nonce('tutor_advanced_tracking_export_' . get_current_user_id())
             ));
         }
     }
@@ -79,26 +80,31 @@ class TutorAdvancedTracking_Shortcode {
                    '</div>';
         }
         
-        // Parse attributes
+        // Parse attributes - but prioritize URL parameters for navigation
         $atts = shortcode_atts(array(
             'view' => 'dashboard',
             'course_id' => 0,
             'user_id' => 0
         ), $atts);
         
+        // Override with URL parameters if present (for navigation)
+        $view = sanitize_text_field($_GET['view'] ?? $atts['view']);
+        $course_id = intval($_GET['course_id'] ?? $atts['course_id']);
+        $user_id = intval($_GET['user_id'] ?? $atts['user_id']);
+        
         // Start output buffering
         ob_start();
         
         // Render based on view type
-        switch ($atts['view']) {
+        switch ($view) {
             case 'course':
-                $this->render_course_view($atts['course_id']);
+                $this->render_course_view($course_id);
                 break;
             case 'user':
-                $this->render_user_view($atts['user_id']);
+                $this->render_user_view($user_id);
                 break;
             case 'analytics':
-                $this->render_analytics_view($atts['course_id']);
+                $this->render_analytics_view($course_id);
                 break;
             default:
                 $this->render_dashboard_view();

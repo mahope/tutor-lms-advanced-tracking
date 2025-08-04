@@ -25,6 +25,8 @@ $courses = $dashboard->get_courses();
                 </select>
             </div>
         </div>
+        
+        <?php do_action('tutor_advanced_tracking_dashboard_header'); ?>
     </div>
 
     <div class="dashboard-stats-overview">
@@ -48,6 +50,8 @@ $courses = $dashboard->get_courses();
             <div class="stats-number"><?php echo esc_html($courses ? round(array_sum(array_column($courses, 'avg_quiz_score')) / count($courses), 1) : 0); ?>%</div>
         </div>
     </div>
+    
+    <?php do_action('tutor_advanced_tracking_dashboard_stats'); ?>
 
     <div class="dashboard-courses">
         <h3><?php _e('Course Overview', 'tutor-lms-advanced-tracking'); ?></h3>

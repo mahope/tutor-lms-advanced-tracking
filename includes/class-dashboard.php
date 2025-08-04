@@ -24,158 +24,59 @@ class TutorAdvancedTracking_Dashboard {
     }
     
     /**
-     * Get courses for dashboard
+     * Get the correct course post type using Tutor LMS integration
+     */
+    private function get_course_post_type() {
+        return TutorAdvancedTracking_TutorIntegration::get_course_post_type();
+    }
+    
+    /**
+     * Get the correct lesson post type using Tutor LMS integration
+     */
+    private function get_lesson_post_type() {
+        return TutorAdvancedTracking_TutorIntegration::get_lesson_post_type();
+    }
+    
+    /**
+     * Get courses for dashboard using WordPress and Tutor LMS standards
      */
     public function get_courses() {
-        global $wpdb;
-        
         $current_user_id = get_current_user_id();
         $is_admin = current_user_can('manage_options');
         
-        // Try to get from cache first
-        $cache_key = 'tutor_advanced_courses_' . $current_user_id . '_' . ($is_admin ? 'admin' : 'instructor');
-        $cached_courses = get_transient($cache_key);
-        
-        if ($cached_courses !== false) {
-            return $cached_courses;
-        }
-        
-        // Base query
-        $sql = "SELECT p.ID, p.post_title, p.post_status, p.post_author
-                FROM {$wpdb->posts} p
-                WHERE p.post_type = 'courses'
-                AND p.post_status = 'publish'";
-        
-        // Restrict to instructor's courses if not admin
-        if (!$is_admin) {
-            $sql .= " AND p.post_author = %d";
-            $courses = $wpdb->get_results($wpdb->prepare($sql, $current_user_id));
-        } else {
-            $courses = $wpdb->get_results($sql);
-        }
-        
-        // Enhance course data with statistics
-        $enhanced_courses = array();
-        foreach ($courses as $course) {
-            $enhanced_courses[] = $this->enhance_course_data($course);
-        }
-        
-        // Cache for 5 minutes
-        set_transient($cache_key, $enhanced_courses, 300);
-        
-        return $enhanced_courses;
+        // Use the new caching system
+        return TutorAdvancedTracking_Cache::get_courses_list($current_user_id, $is_admin);
     }
     
     /**
-     * Enhance course data with statistics
+     * Enhance course data with statistics (now handled by cache layer)
+     * This method is kept for backward compatibility
      */
     private function enhance_course_data($course) {
-        global $wpdb;
-        
-        $course_id = $course->ID;
-        
-        // Try to get from cache first
-        $cache_key = 'tutor_course_stats_' . $course_id;
-        $cached_stats = get_transient($cache_key);
-        
-        if ($cached_stats !== false) {
-            $cached_stats['id'] = $course_id;
-            $cached_stats['title'] = $course->post_title;
-            $cached_stats['status'] = $course->post_status;
-            return $cached_stats;
-        }
-        
-        // Get student count, average progression, and quiz score in one optimized query
-        $stats = $wpdb->get_row($wpdb->prepare(
-            "SELECT 
-                COUNT(DISTINCT e.user_id) as student_count,
-                AVG(qa.earned_marks / qa.total_marks * 100) as avg_quiz_score
-             FROM {$wpdb->prefix}tutor_enrollments e
-             LEFT JOIN {$wpdb->prefix}tutor_quiz_attempts qa ON e.user_id = qa.user_id
-             LEFT JOIN {$wpdb->posts} p ON qa.quiz_id = p.ID AND p.post_parent = e.course_id
-             WHERE e.course_id = %d AND e.status = 'completed'
-             AND (qa.attempt_status = 'attempt_ended' OR qa.attempt_status IS NULL)
-             AND (qa.total_marks > 0 OR qa.total_marks IS NULL)",
-            $course_id
-        ));
-        
-        // Get average progression (simplified calculation)
-        $avg_progression = $this->get_average_progression($course_id);
-        
-        // Get instructor name
-        $instructor = get_userdata($course->post_author);
-        
-        $course_data = array(
-            'id' => $course_id,
-            'title' => $course->post_title,
-            'instructor' => $instructor ? $instructor->display_name : 'Unknown',
-            'student_count' => (int) ($stats->student_count ?? 0),
-            'avg_progression' => $avg_progression,
-            'avg_quiz_score' => $stats->avg_quiz_score ? round($stats->avg_quiz_score, 1) : 0,
-            'status' => $course->post_status
-        );
-        
-        // Cache for 10 minutes
-        set_transient($cache_key, $course_data, 600);
-        
-        return $course_data;
+        $course_id = is_object($course) ? $course->ID : $course['id'];
+        return TutorAdvancedTracking_Cache::get_course_stats($course_id);
     }
     
     /**
-     * Get average progression for a course
+     * Get average progression for a course (now handled by integration layer)
+     * This method is kept for backward compatibility
      */
     private function get_average_progression($course_id) {
-        global $wpdb;
-        
-        // Get course lessons
-        $lessons = $wpdb->get_results($wpdb->prepare(
-            "SELECT ID FROM {$wpdb->posts} 
-             WHERE post_type = 'lesson' 
-             AND post_parent = %d 
-             AND post_status = 'publish'",
-            $course_id
-        ));
-        
-        if (empty($lessons)) {
-            return 0;
-        }
-        
-        $total_lessons = count($lessons);
-        
-        // Get enrolled students
-        $students = $wpdb->get_results($wpdb->prepare(
-            "SELECT user_id FROM {$wpdb->prefix}tutor_enrollments 
-             WHERE course_id = %d AND status = 'completed'",
-            $course_id
-        ));
-        
+        $students = TutorAdvancedTracking_TutorIntegration::get_course_students($course_id);
         if (empty($students)) {
             return 0;
         }
         
-        $total_progression = 0;
+        $total_progress = 0;
         $student_count = count($students);
         
         foreach ($students as $student) {
-            $lesson_ids = array_map('intval', array_column($lessons, 'ID'));
-            if (empty($lesson_ids)) {
-                $completed_lessons = 0;
-            } else {
-                $placeholders = implode(',', array_fill(0, count($lesson_ids), '%d'));
-                $sql = "SELECT COUNT(*) FROM {$wpdb->prefix}tutor_quiz_attempts qa
-                        JOIN {$wpdb->posts} p ON qa.quiz_id = p.ID
-                        WHERE p.post_parent IN ($placeholders)
-                        AND qa.user_id = %d
-                        AND qa.attempt_status = 'attempt_ended'";
-                $params = array_merge($lesson_ids, array(intval($student->user_id)));
-                $completed_lessons = $wpdb->get_var($wpdb->prepare($sql, $params));
-            }
-            
-            $progression = $total_lessons > 0 ? ($completed_lessons / $total_lessons) * 100 : 0;
-            $total_progression += $progression;
+            $user_id = is_object($student) ? $student->ID : $student['ID'];
+            $progress = TutorAdvancedTracking_TutorIntegration::get_user_course_progress($user_id, $course_id);
+            $total_progress += $progress;
         }
         
-        return $student_count > 0 ? round($total_progression / $student_count, 1) : 0;
+        return $student_count > 0 ? round($total_progress / $student_count, 1) : 0;
     }
     
     /**
@@ -217,31 +118,31 @@ class TutorAdvancedTracking_Dashboard {
     }
     
     /**
-     * Search courses
+     * Search courses using WordPress post query
      */
     private function search_courses($query) {
-        global $wpdb;
-        
         $current_user_id = get_current_user_id();
         $is_admin = current_user_can('manage_options');
         
-        $sql = "SELECT p.ID, p.post_title, p.post_author
-                FROM {$wpdb->posts} p
-                WHERE p.post_type = 'courses'
-                AND p.post_status = 'publish'
-                AND p.post_title LIKE %s";
+        $search_args = array(
+            'post_type' => TutorAdvancedTracking_TutorIntegration::get_course_post_type(),
+            'post_status' => 'publish',
+            's' => $query,
+            'posts_per_page' => 20,
+            'fields' => 'ids'
+        );
         
-        $params = array('%' . $query . '%');
-        
+        // Restrict to instructor's courses if not admin
         if (!$is_admin) {
-            $sql .= " AND p.post_author = %d";
-            $params[] = $current_user_id;
+            $search_args['author'] = $current_user_id;
         }
         
-        $courses = $wpdb->get_results($wpdb->prepare($sql, $params));
+        $course_query = new WP_Query($search_args);
+        $course_ids = $course_query->posts;
         
         $results = array();
-        foreach ($courses as $course) {
+        foreach ($course_ids as $course_id) {
+            $course = get_post($course_id);
             $results[] = array(
                 'id' => $course->ID,
                 'title' => $course->post_title,
@@ -257,30 +158,38 @@ class TutorAdvancedTracking_Dashboard {
      * Search users
      */
     private function search_users($query) {
-        global $wpdb;
-        
         $current_user_id = get_current_user_id();
         $is_admin = current_user_can('manage_options');
         
-        $sql = "SELECT DISTINCT u.ID, u.display_name, u.user_email
-                FROM {$wpdb->users} u";
+        $search_args = array(
+            'search' => '*' . $query . '*',
+            'search_columns' => array('display_name', 'user_email'),
+            'fields' => array('ID', 'display_name', 'user_email'),
+            'number' => 20
+        );
         
+        // For instructors, only show students enrolled in their courses
         if (!$is_admin) {
-            // For instructors, only show students enrolled in their courses
-            $sql .= " JOIN {$wpdb->prefix}tutor_enrollments e ON u.ID = e.user_id
-                      JOIN {$wpdb->posts} p ON e.course_id = p.ID
-                      WHERE p.post_author = %d";
-            $params = array($current_user_id);
-        } else {
-            $sql .= " WHERE 1=1";
-            $params = array();
+            $instructor_courses = TutorAdvancedTracking_TutorIntegration::get_user_courses($current_user_id);
+            $enrolled_user_ids = array();
+            
+            foreach ($instructor_courses as $course) {
+                $course_students = TutorAdvancedTracking_TutorIntegration::get_course_students($course->ID);
+                foreach ($course_students as $student) {
+                    $user_id = is_object($student) ? $student->ID : $student['ID'];
+                    $enrolled_user_ids[] = $user_id;
+                }
+            }
+            
+            if (!empty($enrolled_user_ids)) {
+                $search_args['include'] = array_unique($enrolled_user_ids);
+            } else {
+                return array(); // No students to show
+            }
         }
         
-        $sql .= " AND (u.display_name LIKE %s OR u.user_email LIKE %s)";
-        $params[] = '%' . $query . '%';
-        $params[] = '%' . $query . '%';
-        
-        $users = $wpdb->get_results($wpdb->prepare($sql, $params));
+        $user_query = new WP_User_Query($search_args);
+        $users = $user_query->get_results();
         
         $results = array();
         foreach ($users as $user) {

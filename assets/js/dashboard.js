@@ -129,6 +129,85 @@ jQuery(document).ready(function($) {
         }
     });
     
+    // Export functionality
+    $('.export-csv').on('click', function() {
+        const exportType = $(this).data('type');
+        const courseId = $(this).data('course-id') || 0;
+        
+        // Create form and submit
+        const form = $('<form>', {
+            method: 'POST',
+            action: tutorAdvancedTracking.ajaxurl
+        });
+        
+        form.append($('<input>', {
+            type: 'hidden',
+            name: 'action',
+            value: 'tutor_advanced_export_csv'
+        }));
+        
+        form.append($('<input>', {
+            type: 'hidden',
+            name: 'export_type',
+            value: exportType
+        }));
+        
+        form.append($('<input>', {
+            type: 'hidden',
+            name: 'course_id',
+            value: courseId
+        }));
+        
+        form.append($('<input>', {
+            type: 'hidden',
+            name: 'nonce',
+            value: tutorAdvancedTracking.exportNonce
+        }));
+        
+        $('body').append(form);
+        form.submit();
+        form.remove();
+    });
+    
+    $('.export-pdf').on('click', function() {
+        const exportType = $(this).data('type');
+        const courseId = $(this).data('course-id') || 0;
+        
+        // Create form and submit
+        const form = $('<form>', {
+            method: 'POST',
+            action: tutorAdvancedTracking.ajaxurl
+        });
+        
+        form.append($('<input>', {
+            type: 'hidden',
+            name: 'action',
+            value: 'tutor_advanced_export_pdf'
+        }));
+        
+        form.append($('<input>', {
+            type: 'hidden',
+            name: 'export_type',
+            value: exportType
+        }));
+        
+        form.append($('<input>', {
+            type: 'hidden',
+            name: 'course_id',
+            value: courseId
+        }));
+        
+        form.append($('<input>', {
+            type: 'hidden',
+            name: 'nonce',
+            value: tutorAdvancedTracking.exportNonce
+        }));
+        
+        $('body').append(form);
+        form.submit();
+        form.remove();
+    });
+    
     // Progress bar animation
     $('.progress-fill').each(function() {
         const $this = $(this);

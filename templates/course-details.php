@@ -29,6 +29,18 @@ if (!isset($course_data) || !$course_data) {
                class="btn btn-primary">
                 <?php _e('View Advanced Analytics', 'tutor-lms-advanced-tracking'); ?>
             </a>
+            
+            <div class="export-buttons">
+                <button type="button" class="btn btn-secondary export-csv" data-type="course_details" data-course-id="<?php echo intval($course_data['id']); ?>">
+                    <i class="fas fa-download"></i> <?php _e('Export CSV', 'tutor-lms-advanced-tracking'); ?>
+                </button>
+                <button type="button" class="btn btn-secondary export-csv" data-type="quiz_results" data-course-id="<?php echo intval($course_data['id']); ?>">
+                    <i class="fas fa-chart-bar"></i> <?php _e('Quiz Results CSV', 'tutor-lms-advanced-tracking'); ?>
+                </button>
+                <button type="button" class="btn btn-secondary export-pdf" data-type="course_report" data-course-id="<?php echo intval($course_data['id']); ?>">
+                    <i class="fas fa-file-pdf"></i> <?php _e('PDF Report', 'tutor-lms-advanced-tracking'); ?>
+                </button>
+            </div>
         </div>
     </div>
 
@@ -53,6 +65,8 @@ if (!isset($course_data) || !$course_data) {
             <div class="stats-number"><?php echo esc_html($course_data['stats']['avg_completion_time']); ?> <?php _e('days', 'tutor-lms-advanced-tracking'); ?></div>
         </div>
     </div>
+    
+    <?php do_action('tutor_advanced_tracking_course_details_stats', $course_data['id']); ?>
 
     <div class="course-content">
         <div class="course-students">
