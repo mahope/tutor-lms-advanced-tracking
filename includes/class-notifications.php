@@ -646,15 +646,26 @@ class TutorAdvancedTracking_Notifications {
      * Admin page for notification settings
      */
     public function admin_page() {
-        if (isset($_POST['submit'])) {
+        // Handle form submission with nonce verification
+        if (isset($_POST['submit']) && isset($_POST['tutor_notifications_nonce'])) {
+            // Verify nonce for security
+            if (!wp_verify_nonce($_POST['tutor_notifications_nonce'], 'tutor_notifications_settings')) {
+                wp_die(__('Security check failed. Please refresh the page and try again.', 'tutor-lms-advanced-tracking'));
+            }
+
+            // Verify user capability
+            if (!current_user_can('manage_options')) {
+                wp_die(__('You do not have permission to change these settings.', 'tutor-lms-advanced-tracking'));
+            }
+
             update_option('tutor_advanced_notifications_daily_digest', isset($_POST['daily_digest']));
             update_option('tutor_advanced_notifications_weekly_summary', isset($_POST['weekly_summary']));
             update_option('tutor_advanced_notifications_new_enrollments', isset($_POST['new_enrollments']));
             update_option('tutor_advanced_notifications_lesson_completions', isset($_POST['lesson_completions']));
             update_option('tutor_advanced_notifications_quiz_passed', isset($_POST['quiz_passed']));
             update_option('tutor_advanced_notifications_quiz_failed', isset($_POST['quiz_failed']));
-            
-            echo '<div class="notice notice-success"><p>' . __('Settings saved!', 'tutor-lms-advanced-tracking') . '</p></div>';
+
+            echo '<div class="notice notice-success"><p>' . esc_html__('Settings saved!', 'tutor-lms-advanced-tracking') . '</p></div>';
         }
         
         $daily_digest = get_option('tutor_advanced_notifications_daily_digest', true);
@@ -668,6 +679,7 @@ class TutorAdvancedTracking_Notifications {
             <h1><?php _e('Advanced Stats Notification Settings', 'tutor-lms-advanced-tracking'); ?></h1>
             
             <form method="post" action="">
+                <?php wp_nonce_field('tutor_notifications_settings', 'tutor_notifications_nonce'); ?>
                 <table class="form-table">
                     <tr>
                         <th scope="row"><?php _e('Daily Digest Email', 'tutor-lms-advanced-tracking'); ?></th>

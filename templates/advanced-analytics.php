@@ -16,11 +16,15 @@ $analytics = $analytics_data;
 ?>
 
 <div class="tutor-advanced-analytics">
+    <?php
+    // Safely get course_id from request
+    $course_id = isset($_GET['course_id']) ? absint($_GET['course_id']) : 0;
+    ?>
     <div class="analytics-header">
         <div class="breadcrumb">
             <a href="<?php echo esc_url(get_permalink()); ?>"><?php _e('Dashboard', 'tutor-lms-advanced-tracking'); ?></a>
             <span class="separator">/</span>
-            <a href="<?php echo esc_url(add_query_arg(array('view' => 'course', 'course_id' => intval($_GET['course_id'])), get_permalink())); ?>"><?php _e('Course Details', 'tutor-lms-advanced-tracking'); ?></a>
+            <a href="<?php echo esc_url(add_query_arg(array('view' => 'course', 'course_id' => $course_id), get_permalink())); ?>"><?php _e('Course Details', 'tutor-lms-advanced-tracking'); ?></a>
             <span class="separator">/</span>
             <span><?php _e('Advanced Analytics', 'tutor-lms-advanced-tracking'); ?></span>
         </div>

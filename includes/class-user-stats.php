@@ -83,12 +83,14 @@ class TutorAdvancedTracking_UserStats {
     private function get_user_courses($user_id) {
         global $wpdb;
         
+        // Note: In Tutor LMS, enrollment status can be 'enrolled', 'cancelled', etc.
+        // We want all active enrollments, not just 'completed' status
         $courses = $wpdb->get_results($wpdb->prepare(
             "SELECT e.course_id, e.enrollment_date, e.completion_date, e.is_completed,
                     p.post_title, p.post_author
              FROM {$wpdb->prefix}tutor_enrollments e
              JOIN {$wpdb->posts} p ON e.course_id = p.ID
-             WHERE e.user_id = %d AND e.status = 'completed'
+             WHERE e.user_id = %d AND (e.status IS NULL OR e.status != 'cancelled')
              ORDER BY e.enrollment_date DESC",
             $user_id
         ));
@@ -119,15 +121,17 @@ class TutorAdvancedTracking_UserStats {
     private function get_user_overall_stats($user_id) {
         global $wpdb;
         
+        // Count all active enrollments (not cancelled)
         $total_courses = $wpdb->get_var($wpdb->prepare(
-            "SELECT COUNT(*) FROM {$wpdb->prefix}tutor_enrollments 
-             WHERE user_id = %d AND status = 'completed'",
+            "SELECT COUNT(*) FROM {$wpdb->prefix}tutor_enrollments
+             WHERE user_id = %d AND (status IS NULL OR status != 'cancelled')",
             $user_id
         ));
-        
+
+        // Count completed courses based on is_completed flag or completion_date
         $completed_courses = $wpdb->get_var($wpdb->prepare(
-            "SELECT COUNT(*) FROM {$wpdb->prefix}tutor_enrollments 
-             WHERE user_id = %d AND status = 'completed' AND is_completed = 1",
+            "SELECT COUNT(*) FROM {$wpdb->prefix}tutor_enrollments
+             WHERE user_id = %d AND (is_completed = 1 OR completion_date IS NOT NULL)",
             $user_id
         ));
         
@@ -290,11 +294,14 @@ class TutorAdvancedTracking_UserStats {
      */
     private function get_course_progression($course_id, $user_id) {
         global $wpdb;
-        
+
+        // Use integration layer to get the correct lesson post type
+        $lesson_post_type = TutorAdvancedTracking_TutorIntegration::get_lesson_post_type();
+
         $total_lessons = $wpdb->get_var($wpdb->prepare(
-            "SELECT COUNT(*) FROM {$wpdb->posts} 
-             WHERE post_type = 'lesson' AND post_parent = %d AND post_status = 'publish'",
-            $course_id
+            "SELECT COUNT(*) FROM {$wpdb->posts}
+             WHERE post_type = %s AND post_parent = %d AND post_status = 'publish'",
+            $lesson_post_type, $course_id
         ));
         
         if ($total_lessons == 0) {

@@ -120,8 +120,14 @@ if (!isset($course_data) || !$course_data) {
                                         <?php endif; ?>
                                     </td>
                                     <td>
-                                        <span class="status <?php echo $student['completion_status']['is_completed'] ? 'completed' : 'in-progress'; ?>">
-                                            <?php echo $student['completion_status']['is_completed'] ? __('Completed', 'tutor-lms-advanced-tracking') : __('In Progress', 'tutor-lms-advanced-tracking'); ?>
+                                        <?php
+                                        // Handle both array and string format for completion_status
+                                        $is_completed = is_array($student['completion_status'])
+                                            ? !empty($student['completion_status']['is_completed'])
+                                            : ($student['completion_status'] === 'Completed');
+                                        ?>
+                                        <span class="status <?php echo $is_completed ? 'completed' : 'in-progress'; ?>">
+                                            <?php echo $is_completed ? __('Completed', 'tutor-lms-advanced-tracking') : __('In Progress', 'tutor-lms-advanced-tracking'); ?>
                                         </span>
                                     </td>
                                     <td>

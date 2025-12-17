@@ -55,25 +55,29 @@ class TutorAdvancedTracking_AdvancedAnalytics {
      */
     private function get_completion_funnel($course_id) {
         global $wpdb;
-        
+
+        // Use integration layer to get the correct post types
+        $lesson_post_type = TutorAdvancedTracking_TutorIntegration::get_lesson_post_type();
+
         // Get course structure
         $lessons = $wpdb->get_results($wpdb->prepare(
-            "SELECT ID, post_title, menu_order FROM {$wpdb->posts} 
-             WHERE post_type = 'lesson' AND post_parent = %d AND post_status = 'publish'
+            "SELECT ID, post_title, menu_order FROM {$wpdb->posts}
+             WHERE post_type = %s AND post_parent = %d AND post_status = 'publish'
              ORDER BY menu_order ASC",
-            $course_id
+            $lesson_post_type, $course_id
         ));
-        
+
         $quizzes = $wpdb->get_results($wpdb->prepare(
-            "SELECT ID, post_title, menu_order FROM {$wpdb->posts} 
+            "SELECT ID, post_title, menu_order FROM {$wpdb->posts}
              WHERE post_type = 'tutor_quiz' AND post_parent = %d AND post_status = 'publish'
              ORDER BY menu_order ASC",
             $course_id
         ));
-        
+
+        // Count all active enrollments (not cancelled)
         $total_enrolled = $wpdb->get_var($wpdb->prepare(
-            "SELECT COUNT(*) FROM {$wpdb->prefix}tutor_enrollments 
-             WHERE course_id = %d AND status = 'completed'",
+            "SELECT COUNT(*) FROM {$wpdb->prefix}tutor_enrollments
+             WHERE course_id = %d AND (status IS NULL OR status != 'cancelled')",
             $course_id
         ));
         
@@ -91,7 +95,7 @@ class TutorAdvancedTracking_AdvancedAnalytics {
         $first_lesson_access = $wpdb->get_var($wpdb->prepare(
             "SELECT COUNT(DISTINCT e.user_id) FROM {$wpdb->prefix}tutor_enrollments e
              JOIN {$wpdb->prefix}tutor_quiz_attempts qa ON e.user_id = qa.user_id
-             WHERE e.course_id = %d AND e.status = 'completed'",
+             WHERE e.course_id = %d AND (e.status IS NULL OR e.status != 'cancelled')",
             $course_id
         ));
         
@@ -123,8 +127,8 @@ class TutorAdvancedTracking_AdvancedAnalytics {
         
         // Course completion
         $completed = $wpdb->get_var($wpdb->prepare(
-            "SELECT COUNT(*) FROM {$wpdb->prefix}tutor_enrollments 
-             WHERE course_id = %d AND status = 'completed' AND is_completed = 1",
+            "SELECT COUNT(*) FROM {$wpdb->prefix}tutor_enrollments
+             WHERE course_id = %d AND (is_completed = 1 OR completion_date IS NOT NULL)",
             $course_id
         ));
         
@@ -167,8 +171,8 @@ class TutorAdvancedTracking_AdvancedAnalytics {
         ));
         
         $total_students = $wpdb->get_var($wpdb->prepare(
-            "SELECT COUNT(*) FROM {$wpdb->prefix}tutor_enrollments 
-             WHERE course_id = %d AND status = 'completed'",
+            "SELECT COUNT(*) FROM {$wpdb->prefix}tutor_enrollments
+             WHERE course_id = %d AND (status IS NULL OR status != 'cancelled')",
             $course_id
         ));
         
@@ -316,16 +320,16 @@ class TutorAdvancedTracking_AdvancedAnalytics {
         $never_started = $wpdb->get_var($wpdb->prepare(
             "SELECT COUNT(*) FROM {$wpdb->prefix}tutor_enrollments e
              LEFT JOIN {$wpdb->prefix}tutor_quiz_attempts qa ON e.user_id = qa.user_id
-             WHERE e.course_id = %d AND e.status = 'completed' AND qa.attempt_id IS NULL",
+             WHERE e.course_id = %d AND (e.status IS NULL OR e.status != 'cancelled') AND qa.attempt_id IS NULL",
             $course_id
         ));
-        
+
         // Students who started but didn't complete first quiz
         $started_not_completed = $wpdb->get_var($wpdb->prepare(
             "SELECT COUNT(DISTINCT e.user_id) FROM {$wpdb->prefix}tutor_enrollments e
              JOIN {$wpdb->prefix}tutor_quiz_attempts qa ON e.user_id = qa.user_id
              JOIN {$wpdb->posts} p ON qa.quiz_id = p.ID
-             WHERE e.course_id = %d AND e.status = 'completed' AND e.is_completed = 0
+             WHERE e.course_id = %d AND (e.status IS NULL OR e.status != 'cancelled') AND e.is_completed = 0
              AND p.post_parent = %d",
             $course_id, $course_id
         ));
@@ -341,11 +345,11 @@ class TutorAdvancedTracking_AdvancedAnalytics {
         ));
         
         $total_enrolled = $wpdb->get_var($wpdb->prepare(
-            "SELECT COUNT(*) FROM {$wpdb->prefix}tutor_enrollments 
-             WHERE course_id = %d AND status = 'completed'",
+            "SELECT COUNT(*) FROM {$wpdb->prefix}tutor_enrollments
+             WHERE course_id = %d AND (status IS NULL OR status != 'cancelled')",
             $course_id
         ));
-        
+
         return array(
             'never_started' => (int) $never_started,
             'started_not_completed' => (int) $started_not_completed,
@@ -388,12 +392,15 @@ class TutorAdvancedTracking_AdvancedAnalytics {
      */
     private function get_lesson_progression($course_id) {
         global $wpdb;
-        
+
+        // Use integration layer to get the correct lesson post type
+        $lesson_post_type = TutorAdvancedTracking_TutorIntegration::get_lesson_post_type();
+
         $lessons = $wpdb->get_results($wpdb->prepare(
-            "SELECT ID, post_title, menu_order FROM {$wpdb->posts} 
-             WHERE post_type = 'lesson' AND post_parent = %d AND post_status = 'publish'
+            "SELECT ID, post_title, menu_order FROM {$wpdb->posts}
+             WHERE post_type = %s AND post_parent = %d AND post_status = 'publish'
              ORDER BY menu_order ASC",
-            $course_id
+            $lesson_post_type, $course_id
         ));
         
         $progression_data = array();
@@ -472,7 +479,7 @@ class TutorAdvancedTracking_AdvancedAnalytics {
                 SUM(CASE WHEN is_completed = 1 THEN 1 ELSE 0 END) as completed_students,
                 AVG(CASE WHEN completion_date IS NOT NULL THEN DATEDIFF(completion_date, enrollment_date) END) as avg_completion_days
              FROM {$wpdb->prefix}tutor_enrollments
-             WHERE course_id = %d AND status = 'completed'
+             WHERE course_id = %d AND (status IS NULL OR status != 'cancelled')
              AND enrollment_date >= DATE_SUB(NOW(), INTERVAL 12 MONTH)
              GROUP BY DATE_FORMAT(enrollment_date, '%%Y-%%m')
              ORDER BY cohort_month DESC",
@@ -515,7 +522,7 @@ class TutorAdvancedTracking_AdvancedAnalytics {
              JOIN {$wpdb->users} u ON e.user_id = u.ID
              LEFT JOIN {$wpdb->prefix}tutor_quiz_attempts qa ON e.user_id = qa.user_id
              LEFT JOIN {$wpdb->posts} p ON qa.quiz_id = p.ID AND p.post_parent = e.course_id
-             WHERE e.course_id = %d AND e.status = 'completed' AND e.is_completed = 0
+             WHERE e.course_id = %d AND (e.status IS NULL OR e.status != 'cancelled') AND e.is_completed = 0
              GROUP BY e.user_id, u.display_name, u.user_email
              HAVING days_since_last_activity > 7 OR avg_score < 60 OR quizzes_attempted < 2
              ORDER BY days_since_last_activity DESC",
@@ -603,19 +610,19 @@ class TutorAdvancedTracking_AdvancedAnalytics {
     
     private function get_completion_rate($course_id) {
         global $wpdb;
-        
+
         $total = $wpdb->get_var($wpdb->prepare(
-            "SELECT COUNT(*) FROM {$wpdb->prefix}tutor_enrollments 
-             WHERE course_id = %d AND status = 'completed'",
+            "SELECT COUNT(*) FROM {$wpdb->prefix}tutor_enrollments
+             WHERE course_id = %d AND (status IS NULL OR status != 'cancelled')",
             $course_id
         ));
-        
+
         $completed = $wpdb->get_var($wpdb->prepare(
-            "SELECT COUNT(*) FROM {$wpdb->prefix}tutor_enrollments 
-             WHERE course_id = %d AND status = 'completed' AND is_completed = 1",
+            "SELECT COUNT(*) FROM {$wpdb->prefix}tutor_enrollments
+             WHERE course_id = %d AND (is_completed = 1 OR completion_date IS NOT NULL)",
             $course_id
         ));
-        
+
         return $total > 0 ? ($completed / $total) * 100 : 0;
     }
     
