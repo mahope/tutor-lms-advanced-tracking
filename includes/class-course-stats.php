@@ -97,23 +97,35 @@ class TutorAdvancedTracking_CourseStats {
             $user_id = is_object($student) ? $student->ID : $student['ID'];
             $user_data = is_object($student) ? $student : get_userdata($user_id);
             
-            // Get enrollment date using WordPress meta
-            $enrollment_date = get_user_meta($user_id, '_tutor_enrolled_' . $course_id, true);
-            if (!$enrollment_date) {
-                $enrollment_date = current_time('mysql'); // Fallback
+            $enrollment_record = TutorAdvancedTracking_TutorIntegration::get_enrollment_record($course_id, $user_id);
+
+            $enrollment_date = '';
+            if ($enrollment_record && !empty($enrollment_record->enrollment_date)) {
+                $enrollment_date = TutorAdvancedTracking_TutorIntegration::format_enrollment_datetime($enrollment_record->enrollment_date);
             }
-            
+
+            if (!$enrollment_date) {
+                $meta_enrollment = get_user_meta($user_id, '_tutor_enrolled_' . $course_id, true);
+                if (!empty($meta_enrollment)) {
+                    $enrollment_date = $meta_enrollment;
+                }
+            }
+
+            if (!$enrollment_date) {
+                $enrollment_date = current_time('mysql');
+            }
+
             // Get progress using integration layer
             $progress = TutorAdvancedTracking_Cache::get_user_course_progress($user_id, $course_id);
-            
+
             // Get quiz average
             $quiz_average = $this->get_student_quiz_average($course_id, $user_id);
-            
+
             // Get last activity
             $last_activity = $this->get_student_last_activity($course_id, $user_id);
-            
-            // Get completion status using WordPress meta
-            $completion_status = $this->get_student_completion_status($course_id, $user_id);
+
+            // Get completion status
+            $completion_status = $this->get_student_completion_status($course_id, $user_id, $enrollment_record);
             
             $enhanced_students[] = array(
                 'id' => $user_id,
@@ -134,116 +146,16 @@ class TutorAdvancedTracking_CourseStats {
      * Get course students with their progress - OPTIMIZED VERSION (legacy)
      */
     private function get_course_students_optimized($course_id) {
-        global $wpdb;
-        
-        $lesson_post_type = $this->get_lesson_post_type();
-        
-        // Single optimized query to get all student data at once
-        $students_data = $wpdb->get_results($wpdb->prepare(
-            "SELECT 
-                e.user_id,
-                e.enrollment_date,
-                u.display_name,
-                u.user_email,
-                -- Calculate progression
-                (SELECT COUNT(DISTINCT la.lesson_id) 
-                 FROM {$wpdb->prefix}tutor_lesson_activities la
-                 WHERE la.user_id = e.user_id 
-                 AND la.course_id = e.course_id 
-                 AND la.activity_status = 'completed') as completed_lessons,
-                -- Calculate quiz average
-                IFNULL((SELECT AVG(qa.earned_marks / qa.total_marks * 100)
-                 FROM {$wpdb->prefix}tutor_quiz_attempts qa
-                 JOIN {$wpdb->posts} q ON qa.quiz_id = q.ID
-                 WHERE qa.user_id = e.user_id 
-                 AND q.post_parent = e.course_id
-                 AND qa.attempt_status = 'attempt_ended'
-                 AND qa.total_marks > 0), 0) as quiz_average,
-                -- Get last activity
-                GREATEST(
-                    IFNULL((SELECT MAX(la.created_at) 
-                     FROM {$wpdb->prefix}tutor_lesson_activities la
-                     WHERE la.user_id = e.user_id 
-                     AND la.course_id = e.course_id), e.enrollment_date),
-                    IFNULL((SELECT MAX(qa.attempt_started_at)
-                     FROM {$wpdb->prefix}tutor_quiz_attempts qa
-                     JOIN {$wpdb->posts} q ON qa.quiz_id = q.ID
-                     WHERE qa.user_id = e.user_id 
-                     AND q.post_parent = e.course_id), e.enrollment_date)
-                ) as last_activity,
-                -- Check completion status
-                CASE 
-                    WHEN e.completion_date IS NOT NULL THEN 'Completed'
-                    WHEN e.is_completed = 1 THEN 'Completed'
-                    ELSE 'In Progress'
-                END as completion_status
-            FROM {$wpdb->prefix}tutor_enrollments e
-            JOIN {$wpdb->users} u ON e.user_id = u.ID
-            WHERE e.course_id = %d
-            ORDER BY e.enrollment_date DESC",
-            $course_id
-        ));
-        
-        // Get total lessons for progression calculation
-        $total_lessons = $wpdb->get_var($wpdb->prepare(
-            "SELECT COUNT(*) FROM {$wpdb->posts} 
-             WHERE post_type = %s AND post_parent = %d AND post_status = 'publish'",
-            $lesson_post_type, $course_id
-        ));
-        
-        $enhanced_students = array();
-        foreach ($students_data as $student) {
-            $progression = $total_lessons > 0 ? 
-                round(($student->completed_lessons / $total_lessons) * 100, 1) : 0;
-            
-            $enhanced_students[] = array(
-                'id' => $student->user_id,
-                'name' => $student->display_name,
-                'email' => $student->user_email,
-                'enrollment_date' => $student->enrollment_date,
-                'progression' => $progression,
-                'quiz_average' => round($student->quiz_average, 1),
-                'last_activity' => $student->last_activity,
-                'completion_status' => $student->completion_status
-            );
-        }
-        
-        return $enhanced_students;
+        return $this->get_course_students_using_integration($course_id);
     }
-    
+
     /**
      * Get course students with their progress - FALLBACK for missing tables
      */
     private function get_course_students($course_id) {
-        global $wpdb;
-        
-        $students = $wpdb->get_results($wpdb->prepare(
-            "SELECT e.user_id, e.enrollment_date, u.display_name, u.user_email,
-                    e.completion_date, e.is_completed
-             FROM {$wpdb->prefix}tutor_enrollments e
-             JOIN {$wpdb->users} u ON e.user_id = u.ID
-             WHERE e.course_id = %d
-             ORDER BY e.enrollment_date DESC",
-            $course_id
-        ));
-        
-        $enhanced_students = array();
-        foreach ($students as $student) {
-            $enhanced_students[] = array(
-                'id' => $student->user_id,
-                'name' => $student->display_name,
-                'email' => $student->user_email,
-                'enrollment_date' => $student->enrollment_date,
-                'progression' => $this->get_student_progression($course_id, $student->user_id),
-                'quiz_average' => $this->get_student_quiz_average($course_id, $student->user_id),
-                'last_activity' => $this->get_student_last_activity($course_id, $student->user_id),
-                'completion_status' => $student->completion_date || $student->is_completed ? 'Completed' : 'In Progress'
-            );
-        }
-        
-        return $enhanced_students;
+        return $this->get_course_students_using_integration($course_id);
     }
-    
+
     /**
      * Get course quizzes with statistics using Tutor LMS integration
      */
@@ -325,74 +237,98 @@ class TutorAdvancedTracking_CourseStats {
      */
     private function get_student_last_activity($course_id, $user_id) {
         global $wpdb;
-        
-        // Check multiple sources for last activity
+
         $last_quiz = $wpdb->get_var($wpdb->prepare(
             "SELECT MAX(qa.attempt_started_at) 
              FROM {$wpdb->prefix}tutor_quiz_attempts qa
              JOIN {$wpdb->posts} p ON qa.quiz_id = p.ID
              WHERE p.post_parent = %d AND qa.user_id = %d",
-            $course_id, $user_id
+            $course_id,
+            $user_id
         ));
-        
-        $last_lesson = $wpdb->get_var($wpdb->prepare(
-            "SELECT MAX(created_at) 
-             FROM {$wpdb->prefix}tutor_lesson_activities
-             WHERE course_id = %d AND user_id = %d",
-            $course_id, $user_id
-        ));
-        
-        $dates = array_filter(array($last_quiz, $last_lesson));
-        
-        if (empty($dates)) {
-            // Fall back to enrollment date
-            $enrollment_date = $wpdb->get_var($wpdb->prepare(
-                "SELECT enrollment_date FROM {$wpdb->prefix}tutor_enrollments
+
+        $lesson_activity_table = TutorAdvancedTracking_TutorIntegration::get_lesson_activity_table_name();
+        $last_lesson = null;
+        if ($lesson_activity_table) {
+            $last_lesson = $wpdb->get_var($wpdb->prepare(
+                "SELECT MAX(created_at) 
+                 FROM {$lesson_activity_table}
                  WHERE course_id = %d AND user_id = %d",
-                $course_id, $user_id
+                $course_id,
+                $user_id
             ));
-            return $enrollment_date ?: 'Never';
         }
-        
-        return max($dates);
+
+        $dates = array_filter(array($last_quiz, $last_lesson));
+
+        if (empty($dates)) {
+            $enrollment_record = TutorAdvancedTracking_TutorIntegration::get_enrollment_record($course_id, $user_id);
+            if ($enrollment_record && !empty($enrollment_record->enrollment_date)) {
+                $enrollment_date = TutorAdvancedTracking_TutorIntegration::format_enrollment_datetime($enrollment_record->enrollment_date);
+                return $enrollment_date ?: 'Never';
+            }
+
+            return 'Never';
+        }
+
+        $last_activity = max($dates);
+
+        return TutorAdvancedTracking_TutorIntegration::format_enrollment_datetime($last_activity);
     }
-    
+
     /**
      * Get student completion status using WordPress metadata
      */
-    private function get_student_completion_status($course_id, $user_id) {
-        // Check WordPress user meta first
-        $is_completed = get_user_meta($user_id, '_tutor_course_completed_' . $course_id, true);
-        if ($is_completed) {
-            return 'Completed';
-        }
-        
+    private function get_student_completion_status($course_id, $user_id, $enrollment_record = null) {
         // Check course completion date
         $completion_date = get_user_meta($user_id, '_tutor_course_completion_date_' . $course_id, true);
         if ($completion_date) {
             return 'Completed';
         }
-        
-        // Fallback to database check if meta doesn't exist
-        global $wpdb;
-        $table_name = $wpdb->prefix . 'tutor_enrollments';
-        
-        if (TutorAdvancedTracking_TutorIntegration::table_exists($table_name)) {
-            $status = $wpdb->get_row($wpdb->prepare(
-                "SELECT is_completed, completion_date 
-                 FROM {$table_name}
-                 WHERE course_id = %d AND user_id = %d",
-                $course_id, $user_id
-            ));
-            
-            if ($status && ($status->is_completed || $status->completion_date)) {
-                return 'Completed';
-            }
+
+        if (null === $enrollment_record) {
+            $enrollment_record = TutorAdvancedTracking_TutorIntegration::get_enrollment_record($course_id, $user_id);
         }
-        
+
+        if ($enrollment_record && TutorAdvancedTracking_TutorIntegration::enrollment_is_completed($enrollment_record)) {
+            return 'Completed';
+        }
+
         return 'In Progress';
     }
-    
+
+    /**
+     * Get average completion time
+     */
+    private function get_average_completion_time($course_id) {
+        $table_name = TutorAdvancedTracking_TutorIntegration::get_enrollments_table_name();
+        if (!$table_name) {
+            return 0;
+        }
+
+        $columns = TutorAdvancedTracking_TutorIntegration::get_enrollment_columns_map();
+        if (empty($columns['enrollment_date']) || empty($columns['completion_date']) || empty($columns['course_id'])) {
+            return 0;
+        }
+
+        global $wpdb;
+
+        $alias = 'e';
+        $completion_column = $columns['completion_date'];
+        $enrollment_column = $columns['enrollment_date'];
+        $course_column = $columns['course_id'];
+
+        $avg_days = $wpdb->get_var($wpdb->prepare(
+            "SELECT AVG(DATEDIFF({$alias}.{$completion_column}, {$alias}.{$enrollment_column}))
+             FROM {$table_name} {$alias}
+             WHERE {$alias}.{$course_column} = %d
+               AND {$alias}.{$completion_column} IS NOT NULL",
+            $course_id
+        ));
+
+        return $avg_days ? round($avg_days) : 0;
+    }
+
     /**
      * Get quiz statistics
      */
@@ -435,17 +371,6 @@ class TutorAdvancedTracking_CourseStats {
     /**
      * Get average completion time
      */
-    private function get_average_completion_time($course_id) {
-        global $wpdb;
-        
-        $avg_days = $wpdb->get_var($wpdb->prepare(
-            "SELECT AVG(DATEDIFF(completion_date, enrollment_date))
-             FROM {$wpdb->prefix}tutor_enrollments
-             WHERE course_id = %d 
-             AND completion_date IS NOT NULL",
-            $course_id
-        ));
-        
-        return $avg_days ? round($avg_days) : 0;
-    }
 }
+
+

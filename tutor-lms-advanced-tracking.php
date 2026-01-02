@@ -66,11 +66,20 @@ class TutorAdvancedTracking {
         // Initialize cache hooks
         TutorAdvancedTracking_Cache::init_cache_hooks();
         
+        // Ensure legacy Tutor LMS tables are mapped across versions
+        TutorAdvancedTracking_TutorIntegration::ensure_table_alias_filter();
+        
         // Initialize components
         $this->init_components();
         
         // Load textdomain
         load_plugin_textdomain('tutor-lms-advanced-tracking', false, dirname(plugin_basename(__FILE__)) . '/languages');
+        
+        // Load debug tools in admin
+        if (is_admin()) {
+            include_once TUTOR_ADVANCED_TRACKING_PLUGIN_DIR . 'debug-admin-direct.php';
+            include_once TUTOR_ADVANCED_TRACKING_PLUGIN_DIR . 'test-enrollment-data.php';
+        }
     }
     
     /**
@@ -88,7 +97,8 @@ class TutorAdvancedTracking {
             'includes/class-export.php',
             'includes/class-notifications.php',
             'includes/class-charts.php',
-            'includes/class-api.php'
+            'includes/class-api.php',
+            'includes/class-admin.php'
         );
         
         foreach ($required_files as $file) {
@@ -120,7 +130,8 @@ class TutorAdvancedTracking {
             'TutorAdvancedTracking_Export',
             'TutorAdvancedTracking_Notifications',
             'TutorAdvancedTracking_Charts',
-            'TutorAdvancedTracking_API'
+            'TutorAdvancedTracking_API',
+            'TutorAdvancedTracking_Admin'
         );
         
         foreach ($components as $component) {

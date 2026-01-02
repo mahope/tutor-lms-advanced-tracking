@@ -199,28 +199,56 @@ class TutorAdvancedTracking_Cache {
             return false;
         }
         
-        // Get enrollment stats using integration layer
-        $enrollment_stats = TutorAdvancedTracking_TutorIntegration::get_course_enrollment_stats($course_id);
+        // Get enrollment stats using integration layer with fallback
+        try {
+            $enrollment_stats = TutorAdvancedTracking_TutorIntegration::get_course_enrollment_stats($course_id);
+        } catch (Exception $e) {
+            error_log('Course stats error for course ' . $course_id . ': ' . $e->getMessage());
+            $enrollment_stats = array(
+                'total_students' => 0,
+                'completed_students' => 0,
+                'active_students' => 0
+            );
+        }
+        
+        // Ensure enrollment_stats is an array with required keys
+        if (!is_array($enrollment_stats)) {
+            $enrollment_stats = array(
+                'total_students' => 0,
+                'completed_students' => 0,
+                'active_students' => 0
+            );
+        }
         
         // Get instructor info
         $instructor = get_userdata($course->post_author);
         
-        // Calculate average quiz score
-        $avg_quiz_score = self::calculate_average_quiz_score($course_id);
+        // Calculate average quiz score with error handling
+        try {
+            $avg_quiz_score = self::calculate_average_quiz_score($course_id);
+        } catch (Exception $e) {
+            error_log('Quiz score calculation error for course ' . $course_id . ': ' . $e->getMessage());
+            $avg_quiz_score = 0;
+        }
         
-        // Calculate average progression
-        $avg_progression = self::calculate_average_progression($course_id);
+        // Calculate average progression with error handling
+        try {
+            $avg_progression = self::calculate_average_progression($course_id);
+        } catch (Exception $e) {
+            error_log('Progression calculation error for course ' . $course_id . ': ' . $e->getMessage());
+            $avg_progression = 0;
+        }
         
         return array(
             'id' => $course_id,
             'title' => $course->post_title,
             'instructor' => $instructor ? $instructor->display_name : 'Unknown',
-            'student_count' => $enrollment_stats['total_students'],
-            'completed_students' => $enrollment_stats['completed_students'],
+            'student_count' => isset($enrollment_stats['total_students']) ? (int)$enrollment_stats['total_students'] : 0,
+            'completed_students' => isset($enrollment_stats['completed_students']) ? (int)$enrollment_stats['completed_students'] : 0,
             'completion_rate' => $enrollment_stats['total_students'] > 0 ? 
                 round(($enrollment_stats['completed_students'] / $enrollment_stats['total_students']) * 100, 1) : 0,
-            'avg_progression' => $avg_progression,
-            'avg_quiz_score' => $avg_quiz_score,
+            'avg_progression' => (float)$avg_progression,
+            'avg_quiz_score' => (float)$avg_quiz_score,
             'status' => $course->post_status,
             'generated_at' => current_time('timestamp')
         );
@@ -277,14 +305,24 @@ class TutorAdvancedTracking_Cache {
         
         $total_progress = 0;
         $student_count = count($students);
+        $valid_progress_count = 0;
         
         foreach ($students as $student) {
-            $user_id = is_object($student) ? $student->ID : $student['ID'];
-            $progress = TutorAdvancedTracking_TutorIntegration::get_user_course_progress($user_id, $course_id);
-            $total_progress += $progress;
+            $user_id = is_object($student) ? $student->ID : (isset($student['ID']) ? $student['ID'] : $student);
+            
+            try {
+                $progress = TutorAdvancedTracking_TutorIntegration::get_user_course_progress($user_id, $course_id);
+                if ($progress !== false && $progress >= 0) {
+                    $total_progress += $progress;
+                    $valid_progress_count++;
+                }
+            } catch (Exception $e) {
+                // Skip this student if there's an error
+                continue;
+            }
         }
         
-        return $student_count > 0 ? round($total_progress / $student_count, 1) : 0;
+        return $valid_progress_count > 0 ? round($total_progress / $valid_progress_count, 1) : 0;
     }
     
     /**

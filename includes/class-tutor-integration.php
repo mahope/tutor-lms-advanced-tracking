@@ -10,7 +10,43 @@ if (!defined('ABSPATH')) {
 }
 
 class TutorAdvancedTracking_TutorIntegration {
-    
+
+    /**
+     * Cache resolved table names to avoid repeated lookups.
+     *
+     * @var array<string, string|false>
+     */
+    private static $table_cache = array();
+
+    /**
+     * Cached enrollment column map.
+     *
+     * @var array|null
+     */
+    private static $enrollment_columns = null;
+
+    /**
+     * Cached enrollment rows keyed by course:user pairs.
+     *
+     * @var array<string, object|null>
+     */
+    private static $enrollment_record_cache = array();
+
+    /**
+     * Guard to prevent recursive table detection during query filtering.
+     *
+     * @var bool
+     */
+    private static $inside_table_detection = false;
+
+    /**
+     * Tracks whether legacy table replacement has been hooked.
+     *
+     * @var bool
+     */
+    private static $alias_filter_attached = false;
+
+
     /**
      * Get course post type using Tutor LMS API
      */
@@ -57,6 +93,343 @@ class TutorAdvancedTracking_TutorIntegration {
         return 'tutor_quiz'; // Default fallback
     }
     
+    /**
+     * Resolve Tutor LMS table names across versions.
+     *
+     * @param string $slug Table identifier.
+     * @return string|false
+     */
+    public static function get_table_name($slug) {
+        if (isset(self::$table_cache[$slug])) {
+            return self::$table_cache[$slug];
+        }
+
+        self::$inside_table_detection = true;
+
+        try {
+            foreach (self::get_table_candidates($slug) as $table_name) {
+                if (self::table_exists($table_name)) {
+                    self::$table_cache[$slug] = $table_name;
+                    return $table_name;
+                }
+            }
+        } finally {
+            self::$inside_table_detection = false;
+        }
+
+        self::$table_cache[$slug] = false;
+        return false;
+    }
+
+    /**
+     * Get the enrollment table name helper.
+     *
+     * @return string|false
+     */
+    public static function get_enrollments_table_name() {
+        return self::get_table_name('enrollments');
+    }
+
+    /**
+     * Get the lesson activity table name helper.
+     *
+     * @return string|false
+     */
+    public static function get_lesson_activity_table_name() {
+        return self::get_table_name('lesson_activities');
+    }
+
+    /**
+     * Provide candidate table names for Tutor LMS across versions.
+     *
+     * @param string $slug
+     * @return array<int, string>
+     */
+    private static function get_table_candidates($slug) {
+        global $wpdb;
+
+        switch ($slug) {
+            case 'enrollments':
+                return array(
+                    $wpdb->prefix . 'tutor_enrollments',
+                    $wpdb->prefix . 'tutor_enrolled'
+                );
+
+            case 'lesson_activities':
+                return array(
+                    $wpdb->prefix . 'tutor_lesson_activities',
+                    $wpdb->prefix . 'tutor_activities'
+                );
+
+            default:
+                return array();
+        }
+    }
+
+    /**
+     * Describe a table to obtain column names.
+     *
+     * @param string $table_name
+     * @return array<int, string>
+     */
+    private static function describe_table($table_name) {
+        global $wpdb;
+
+        $columns = $wpdb->get_results("DESCRIBE {$table_name}");
+
+        if (empty($columns) || !is_array($columns)) {
+            return array();
+        }
+
+        if (!function_exists('wp_list_pluck')) {
+            require_once ABSPATH . 'wp-includes/functions.php';
+        }
+
+        return wp_list_pluck($columns, 'Field');
+    }
+
+    /**
+     * Map enrollment table columns to a normalized structure.
+     *
+     * @return array<string, string|null>
+     */
+    public static function get_enrollment_columns_map() {
+        if (null !== self::$enrollment_columns) {
+            return self::$enrollment_columns;
+        }
+
+        $table_name = self::get_enrollments_table_name();
+        if (!$table_name) {
+            self::$enrollment_columns = array();
+            return self::$enrollment_columns;
+        }
+
+        $columns = self::describe_table($table_name);
+
+        self::$enrollment_columns = array(
+            'id' => in_array('id', $columns, true) ? 'id' : (in_array('enrollment_id', $columns, true) ? 'enrollment_id' : null),
+            'user_id' => in_array('user_id', $columns, true) ? 'user_id' : null,
+            'course_id' => in_array('course_id', $columns, true) ? 'course_id' : null,
+            'enrollment_date' => in_array('enrollment_date', $columns, true) ? 'enrollment_date' : (in_array('time', $columns, true) ? 'time' : null),
+            'completion_date' => in_array('completion_date', $columns, true) ? 'completion_date' : (in_array('completed_at', $columns, true) ? 'completed_at' : null),
+            'is_completed' => in_array('is_completed', $columns, true) ? 'is_completed' : null,
+            'status' => in_array('status', $columns, true) ? 'status' : null
+        );
+
+        return self::$enrollment_columns;
+    }
+
+    /**
+     * Build a completion condition that works across Tutor LMS schemas.
+     *
+     * @param string $alias SQL table alias.
+     * @return string
+     */
+    public static function get_enrollment_completion_condition($alias = 'e') {
+        $columns = self::get_enrollment_columns_map();
+
+        $conditions = array();
+
+        if (!empty($columns['is_completed'])) {
+            $conditions[] = "{$alias}.{$columns['is_completed']} = 1";
+        }
+
+        if (!empty($columns['completion_date'])) {
+            $conditions[] = "{$alias}.{$columns['completion_date']} IS NOT NULL";
+        }
+
+        if (!empty($columns['status'])) {
+            $conditions[] = "{$alias}.{$columns['status']} IN ('completed', 'complete', 'passed', 'publish')";
+        }
+
+        if (empty($conditions)) {
+            return '0=1';
+        }
+
+        return implode(' OR ', array_unique($conditions));
+    }
+
+    /**
+     * Normalize enrollment datetime values.
+     *
+     * @param mixed $value Raw database value.
+     * @return string
+     */
+    public static function format_enrollment_datetime($value) {
+        if (empty($value) || '0000-00-00 00:00:00' === $value) {
+            return '';
+        }
+
+        if (is_numeric($value)) {
+            return gmdate('Y-m-d H:i:s', (int) $value);
+        }
+
+        return (string) $value;
+    }
+
+    /**
+     * Retrieve an enrollment record for a given course/user pair.
+     *
+     * @param int $course_id Course ID.
+     * @param int $user_id User ID.
+     * @return object|null
+     */
+    public static function get_enrollment_record($course_id, $user_id) {
+        $course_id = (int) $course_id;
+        $user_id = (int) $user_id;
+        $cache_key = $course_id . ':' . $user_id;
+
+        if (isset(self::$enrollment_record_cache[$cache_key])) {
+            return self::$enrollment_record_cache[$cache_key];
+        }
+
+        $table_name = self::get_enrollments_table_name();
+        if (!$table_name) {
+            self::$enrollment_record_cache[$cache_key] = null;
+            return null;
+        }
+
+        $columns = self::get_enrollment_columns_map();
+        if (empty($columns['course_id']) || empty($columns['user_id'])) {
+            self::$enrollment_record_cache[$cache_key] = null;
+            return null;
+        }
+
+        global $wpdb;
+
+        $alias = 'e';
+
+        $fields = array(
+            "{$alias}.{$columns['user_id']} AS user_id"
+        );
+
+        if (!empty($columns['enrollment_date'])) {
+            $fields[] = "{$alias}.{$columns['enrollment_date']} AS enrollment_date";
+        } else {
+            $fields[] = 'NULL AS enrollment_date';
+        }
+
+        if (!empty($columns['completion_date'])) {
+            $fields[] = "{$alias}.{$columns['completion_date']} AS completion_date";
+        } else {
+            $fields[] = 'NULL AS completion_date';
+        }
+
+        if (!empty($columns['is_completed'])) {
+            $fields[] = "{$alias}.{$columns['is_completed']} AS completion_flag";
+        } else {
+            $fields[] = 'NULL AS completion_flag';
+        }
+
+        if (!empty($columns['status'])) {
+            $fields[] = "{$alias}.{$columns['status']} AS status_value";
+        } else {
+            $fields[] = 'NULL AS status_value';
+        }
+
+        $sql = $wpdb->prepare(
+            "SELECT " . implode(', ', $fields) . "
+             FROM {$table_name} {$alias}
+             WHERE {$alias}.{$columns['course_id']} = %d
+               AND {$alias}.{$columns['user_id']} = %d
+             LIMIT 1",
+            $course_id,
+            $user_id
+        );
+
+        $record = $wpdb->get_row($sql);
+
+        self::$enrollment_record_cache[$cache_key] = $record ? $record : null;
+
+        return self::$enrollment_record_cache[$cache_key];
+    }
+
+    /**
+     * Determine if an enrollment record is completed.
+     *
+     * @param object|null $record Enrollment row.
+     * @return bool
+     */
+    public static function enrollment_is_completed($record) {
+        if (!$record) {
+            return false;
+        }
+
+        if (isset($record->completion_flag) && '' !== $record->completion_flag && null !== $record->completion_flag) {
+            if (is_numeric($record->completion_flag)) {
+                if ((int) $record->completion_flag === 1) {
+                    return true;
+                }
+            } else {
+                $flag = strtolower((string) $record->completion_flag);
+                if (in_array($flag, array('completed', 'complete', 'yes', 'true', '1'), true)) {
+                    return true;
+                }
+            }
+        }
+
+        if (!empty($record->status_value)) {
+            $status = strtolower((string) $record->status_value);
+            if (in_array($status, array('completed', 'complete', 'passed', 'success', 'publish'), true)) {
+                return true;
+            }
+        }
+
+        if (!empty($record->completion_date) && '0000-00-00 00:00:00' !== $record->completion_date) {
+            return true;
+        }
+
+        return false;
+    }
+
+    /**
+     * Ensure legacy Tutor LMS table names are remapped when executing raw SQL.
+     */
+    public static function ensure_table_alias_filter() {
+        if (self::$alias_filter_attached) {
+            return;
+        }
+
+        self::$alias_filter_attached = true;
+
+        // Prime caches before filters modify queries
+        self::get_enrollments_table_name();
+        self::get_lesson_activity_table_name();
+
+        add_filter('query', array(__CLASS__, 'filter_legacy_tables'));
+    }
+
+    /**
+     * Replace legacy Tutor LMS table names with their resolved counterparts.
+     *
+     * @param string $query SQL query.
+     * @return string
+     */
+    public static function filter_legacy_tables($query) {
+        if (self::$inside_table_detection || empty($query) || !is_string($query)) {
+            return $query;
+        }
+
+        global $wpdb;
+
+        $legacy_enrollments = isset($wpdb->prefix) ? $wpdb->prefix . 'tutor_enrollments' : 'tutor_enrollments';
+        $resolved_enrollments = self::get_enrollments_table_name();
+
+        if ($resolved_enrollments && $resolved_enrollments !== $legacy_enrollments && strpos($query, $legacy_enrollments) !== false) {
+            $query = str_replace($legacy_enrollments, $resolved_enrollments, $query);
+        }
+
+        $legacy_lessons = isset($wpdb->prefix) ? $wpdb->prefix . 'tutor_lesson_activities' : 'tutor_lesson_activities';
+        $resolved_lessons = self::get_lesson_activity_table_name();
+
+        if ($resolved_lessons && $resolved_lessons !== $legacy_lessons && strpos($query, $legacy_lessons) !== false) {
+            $query = str_replace($legacy_lessons, $resolved_lessons, $query);
+        }
+
+        return $query;
+    }
+
+
     /**
      * Get enrolled students for a course using Tutor LMS API
      */
@@ -198,51 +571,54 @@ class TutorAdvancedTracking_TutorIntegration {
      * Get course enrollment statistics
      */
     public static function get_course_enrollment_stats($course_id) {
-        // Try Tutor LMS function first
-        if (function_exists('tutor_utils')) {
+        // Always use fallback for more reliable results
+        $stats = self::get_enrollment_stats_fallback($course_id);
+        
+        // Try Tutor LMS function as a backup check
+        if (function_exists('tutor_utils') && $stats['total_students'] == 0) {
             $total_students = tutor_utils()->count_enrolled_users($course_id);
-            if ($total_students !== false) {
-                return array(
-                    'total_students' => $total_students,
-                    'completed_students' => self::count_completed_students($course_id)
-                );
+            if ($total_students !== false && $total_students > 0) {
+                $stats['total_students'] = (int)$total_students;
+                $stats['completed_students'] = self::count_completed_students($course_id);
             }
         }
         
-        // Fallback to database query with safety checks
-        return self::get_enrollment_stats_fallback($course_id);
+        return $stats;
     }
     
     /**
      * Fallback method to get course students using WordPress API
      */
     private static function get_course_students_fallback($course_id) {
-        global $wpdb;
-        
-        // Check if enrollment table exists
-        $table_name = $wpdb->prefix . 'tutor_enrollments';
-        if (!self::table_exists($table_name)) {
+        $table_name = self::get_enrollments_table_name();
+        if (!$table_name) {
             return array();
         }
-        
-        // Get enrolled user IDs first
+
+        $columns = self::get_enrollment_columns_map();
+        if (empty($columns['course_id']) || empty($columns['user_id'])) {
+            return array();
+        }
+
+        global $wpdb;
+
         $user_ids = $wpdb->get_col($wpdb->prepare(
-            "SELECT user_id FROM {$table_name} WHERE course_id = %d",
+            "SELECT {$columns['user_id']} FROM {$table_name} WHERE {$columns['course_id']} = %d",
             $course_id
         ));
-        
+
         if (empty($user_ids)) {
             return array();
         }
-        
-        // Use WordPress user query
+
         $user_query = new WP_User_Query(array(
             'include' => $user_ids,
             'fields' => array('ID', 'display_name', 'user_email')
         ));
-        
+
         return $user_query->get_results();
     }
+        
     
     /**
      * Fallback method to calculate user progress
@@ -270,47 +646,64 @@ class TutorAdvancedTracking_TutorIntegration {
      * Count completed students for a course
      */
     private static function count_completed_students($course_id) {
-        global $wpdb;
-        
-        $table_name = $wpdb->prefix . 'tutor_enrollments';
-        if (!self::table_exists($table_name)) {
+        $table_name = self::get_enrollments_table_name();
+        if (!$table_name) {
             return 0;
         }
-        
-        return $wpdb->get_var($wpdb->prepare(
-            "SELECT COUNT(*) FROM {$table_name} 
-             WHERE course_id = %d 
-             AND (is_completed = 1 OR completion_date IS NOT NULL)",
+
+        $columns = self::get_enrollment_columns_map();
+        if (empty($columns['course_id'])) {
+            return 0;
+        }
+
+        $completion_condition = self::get_enrollment_completion_condition('e');
+        if ('0=1' === $completion_condition) {
+            return 0;
+        }
+
+        global $wpdb;
+
+        return (int) $wpdb->get_var($wpdb->prepare(
+            "SELECT COUNT(*) FROM {$table_name} e
+             WHERE e.{$columns['course_id']} = %d
+               AND ({$completion_condition})",
             $course_id
         ));
     }
-    
+
     /**
      * Fallback enrollment stats
      */
     private static function get_enrollment_stats_fallback($course_id) {
-        global $wpdb;
-        
-        $table_name = $wpdb->prefix . 'tutor_enrollments';
-        if (!self::table_exists($table_name)) {
+        $table_name = self::get_enrollments_table_name();
+        if (!$table_name) {
             return array('total_students' => 0, 'completed_students' => 0);
         }
-        
+
+        $columns = self::get_enrollment_columns_map();
+        if (empty($columns['course_id'])) {
+            return array('total_students' => 0, 'completed_students' => 0);
+        }
+
+        $completion_condition = self::get_enrollment_completion_condition('e');
+
+        global $wpdb;
+
         $stats = $wpdb->get_row($wpdb->prepare(
-            "SELECT 
-                COUNT(*) as total_students,
-                SUM(CASE WHEN is_completed = 1 OR completion_date IS NOT NULL THEN 1 ELSE 0 END) as completed_students
-             FROM {$table_name}
-             WHERE course_id = %d",
+            "SELECT
+                COUNT(*) AS total_students,
+                SUM(CASE WHEN {$completion_condition} THEN 1 ELSE 0 END) AS completed_students
+             FROM {$table_name} e
+             WHERE e.{$columns['course_id']} = %d",
             $course_id
         ));
-        
+
         return array(
             'total_students' => (int) ($stats->total_students ?? 0),
             'completed_students' => (int) ($stats->completed_students ?? 0)
         );
     }
-    
+
     /**
      * Check if database table exists
      */
