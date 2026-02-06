@@ -20,6 +20,11 @@ class TutorAdvancedTracking_Admin {
         add_action('wp_ajax_tutor_advanced_debug_action', array($this, 'handle_debug_actions'));
         add_action('wp_ajax_tutor_advanced_cache_action', array($this, 'handle_cache_actions'));
         add_action('admin_notices', array($this, 'show_admin_notices'));
+        add_action('admin_enqueue_scripts', array($this, 'enqueue_extra_assets'));
+    }
+
+    public function enqueue_extra_assets(){
+        wp_enqueue_script('tutor-advanced-extra', TUTOR_ADVANCED_TRACKING_PLUGIN_URL . 'assets/js/advanced-analytics-extra.js', array('jquery'), TUTOR_ADVANCED_TRACKING_VERSION, true);
     }
     
     /**

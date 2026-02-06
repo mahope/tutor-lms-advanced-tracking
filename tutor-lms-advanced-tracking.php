@@ -98,7 +98,9 @@ class TutorAdvancedTracking {
             'includes/class-notifications.php',
             'includes/class-charts.php',
             'includes/class-api.php',
-            'includes/class-admin.php'
+            'includes/class-admin.php',
+            'includes/class-engagement.php',
+            'includes/class-cohort-analytics.php'
         );
         
         foreach ($required_files as $file) {
@@ -131,7 +133,9 @@ class TutorAdvancedTracking {
             'TutorAdvancedTracking_Notifications',
             'TutorAdvancedTracking_Charts',
             'TutorAdvancedTracking_API',
-            'TutorAdvancedTracking_Admin'
+            'TutorAdvancedTracking_Admin',
+            'TutorAdvancedTracking_Engagement',
+            'TutorAdvancedTracking_CohortAnalytics'
         );
         
         foreach ($components as $component) {
