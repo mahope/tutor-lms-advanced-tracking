@@ -1,0 +1,30 @@
+name: PHP Lint
+on:
+  push:
+    branches: [ master, main, 'chore/**', 'fix/**' ]
+  pull_request:
+  workflow_dispatch:
+jobs:
+  lint:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Setup PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.2'
+          coverage: none
+      - name: Lint PHP files
+        shell: bash
+        run: |
+          set -euo pipefail
+          mapfile -t files < <(git ls-files '*.php' || find . -type f -name '*.php')
+          if [ ${#files[@]} -eq 0 ]; then
+            echo "No PHP files to lint."
+            exit 0
+          fi
+          for f in "${files[@]}"; do
+            [ -n "$f" ] || continue
+            echo "Linting $f"
+            php -l "$f"
+          done
