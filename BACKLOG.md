@@ -6,6 +6,13 @@
 
 ---
 
+## 🎯 UI/UX Princip
+**Alle features SKAL være synlige og tilgængelige for brugeren!**
+- Backend-funktionalitet → tilføj også UI (knap, menu, side)
+- Ingen "skjulte" features — brugeren skal kunne finde og bruge det
+- Test at UI er responsiv og intuitiv
+
+
 ## ✅ Completed
 
 ### Core Plugin
@@ -27,6 +34,13 @@
 - [x] Integrer med class-license-validator.php
 
 ---
+
+## 🎯 UI/UX Princip
+**Alle features SKAL være synlige og tilgængelige for brugeren!**
+- Backend-funktionalitet → tilføj også UI (knap, menu, side)
+- Ingen "skjulte" features — brugeren skal kunne finde og bruge det
+- Test at UI er responsiv og intuitiv
+
 
 ## 🚀 Phase 1: Launch Ready (Prioritet 1)
 
@@ -58,6 +72,13 @@
 
 ---
 
+## 🎯 UI/UX Princip
+**Alle features SKAL være synlige og tilgængelige for brugeren!**
+- Backend-funktionalitet → tilføj også UI (knap, menu, side)
+- Ingen "skjulte" features — brugeren skal kunne finde og bruge det
+- Test at UI er responsiv og intuitiv
+
+
 ## 📈 Phase 2: Launch & Marketing (Prioritet 2)
 
 ### Sales Infrastructure
@@ -85,6 +106,13 @@
 
 ---
 
+## 🎯 UI/UX Princip
+**Alle features SKAL være synlige og tilgængelige for brugeren!**
+- Backend-funktionalitet → tilføj også UI (knap, menu, side)
+- Ingen "skjulte" features — brugeren skal kunne finde og bruge det
+- Test at UI er responsiv og intuitiv
+
+
 ## 🔧 Phase 3: Growth Features (Prioritet 3)
 
 ### Advanced Features
@@ -105,6 +133,13 @@
 - [ ] Priority support tier
 
 ---
+
+## 🎯 UI/UX Princip
+**Alle features SKAL være synlige og tilgængelige for brugeren!**
+- Backend-funktionalitet → tilføj også UI (knap, menu, side)
+- Ingen "skjulte" features — brugeren skal kunne finde og bruge det
+- Test at UI er responsiv og intuitiv
+
 
 ## 📝 Notes
 
