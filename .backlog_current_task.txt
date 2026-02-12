@@ -1,0 +1,1 @@
+icensmodel: årlig licens + domain checks (LemonSqueezy/WOOREST), simple license validator

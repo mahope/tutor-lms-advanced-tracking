@@ -86,22 +86,9 @@ class TutorAdvancedTracking {
      * Load required files
      */
     private function load_files() {
-        $required_files = array(
-            'includes/class-tutor-integration.php',
-            'includes/class-cache.php',
-            'includes/class-shortcode.php',
-            'includes/class-dashboard.php',
-            'includes/class-course-stats.php',
-            'includes/class-user-stats.php',
-            'includes/class-advanced-analytics.php',
-            'includes/class-export.php',
-            'includes/class-notifications.php',
-            'includes/class-charts.php',
-            'includes/class-api.php',
-            'includes/class-admin.php',
-            'includes/class-engagement.php',
-            'includes/class-cohort-analytics.php'
-        );
+        $required_files
+        [] = 'includes/class-events-db.php';
+        [] = 'includes/class-cli.php';
         
         foreach ($required_files as $file) {
             $filepath = TUTOR_ADVANCED_TRACKING_PLUGIN_DIR . $file;
@@ -218,7 +205,13 @@ class TutorAdvancedTracking {
         }
         
         // Create any necessary database tables or options
-        $this->create_database_tables();
+        $this
+
+        // Ensure custom events tables exist
+        if (!class_exists('TutorAdvancedTracking_EventsDB')) {
+            require_once TUTOR_ADVANCED_TRACKING_PLUGIN_DIR . 'includes/class-events-db.php';
+        }
+        TutorAdvancedTracking_EventsDB::install();
         
         // Set plugin version for updates
         update_option('tutor_advanced_tracking_version', TUTOR_ADVANCED_TRACKING_VERSION);
