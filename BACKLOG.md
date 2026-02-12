@@ -10,3 +10,26 @@
 - [x] Docs/README: install, setup, screenshots, hooks/filters reference — completed 2026-02-12 17:07 CET
 - [x] Demo-video (2 min): key value prop + UI-walkthrough (script outline) — done: 2026-02-12 17:30
 - [x] Launch-plan: versioning, changelog, release checklist, support-templates (done: 2026-02-12 17:50)
+
+## New Features (2026-02-12)
+- [ ] Kursus-funnel dashboard (enroll → start → complete) med drop-off analyse
+- [ ] Segmenter pr. brugergruppe (role, kursus, aktivitet) + filtrerbare grafer
+- [ ] Real-time session-tracking (heartbeat) med "aktive elever nu"
+- [ ] Alerting: e-mail/Slack ved fald i completion >X% uge/uge
+- [ ] Eksport til CSV/JSON pr. kursus/lektioneniveau (inkl. quiz metrics)
+- [ ] "Learner journey" visning (timeline for elevens haendelser)
+- [ ] Multisite support + netvaerksoversigter
+- [ ] REST API endpoints til dataudtraek (JWT beskyttet)
+- [ ] Dataintegritet: reprocesserings-queue og "rebuild aggregates"
+- [ ] Indbygget datamaskering/GDPR (hash af PII, opt-in/-out UI)
+- [ ] Cohort-analyse (uge/maaned) med retention-kurver
+- [ ] Instruktor-dashboard (kursusperformance pr. underviser)
+- [ ] Egen KPI-builder (vaelg metrics + filtre → gemt rapport)
+- [ ] Webhooks (event-stream til eksterne systemer)
+- [ ] Ugentlig e-mailrapport (PDF/CSV bilag) pr. kursus
+- [ ] BigQuery/CSV bulk-eksport (schedule + on-demand)
+- [ ] Rollebaserede rettigheder (admin/instructor/viewer)
+- [ ] Rapport-planlaegning (send til mail/Slack paa tid)
+- [ ] Kursus-sammenligning (A/B af curriculums)
+- [ ] Data quality monitor (manglende events, clock drift)
+- [ ] Implementer Plausible analytics (self-hosted: analytics.holstjensen.eu)
