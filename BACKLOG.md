@@ -67,8 +67,9 @@
 ### Testing
 - [x] Unit tests for license validator (PHPUnit)
 - [x] Integration test: aktivering → deaktivering → reaktivering
-- [ ] Test på WordPress 6.4, 6.5, 6.6
-- [ ] Test med Tutor LMS Free + Pro
+- [x] Docker-based test infrastructure (`make test-up`, `./scripts/test-wp-compat.sh`)
+- [ ] Test på WordPress 6.4, 6.5, 6.6 — **READY**: Run `make test-wp-compat` (requires manual Tutor LMS install in container)
+- [ ] Test med Tutor LMS Free + Pro — **READY**: Use Docker env at http://localhost:8080, install Tutor LMS manually
 
 ---
 
