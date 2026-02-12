@@ -1,0 +1,258 @@
+/**
+ * Funnel Dashboard Styles
+ * 
+ * @package TutorAdvancedTracking
+ * @since 2.0.0
+ */
+
+.tlat-funnel-wrap {
+    max-width: 1400px;
+    margin: 0 auto;
+    padding: 20px;
+}
+
+.tlat-funnel-wrap h1 {
+    margin-bottom: 20px;
+    color: #1e293b;
+}
+
+.tlat-funnel-wrap h2 {
+    font-size: 18px;
+    font-weight: 600;
+    color: #334155;
+    margin: 0 0 15px 0;
+}
+
+/* Filters */
+.tlat-funnel-filters {
+    display: flex;
+    gap: 12px;
+    align-items: center;
+    margin-bottom: 24px;
+    padding: 16px;
+    background: #fff;
+    border-radius: 8px;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+.tlat-select {
+    padding: 8px 12px;
+    border: 1px solid #e2e8f0;
+    border-radius: 6px;
+    font-size: 14px;
+    min-width: 180px;
+}
+
+.tlat-select:focus {
+    outline: none;
+    border-color: #3b82f6;
+    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+}
+
+/* Grid Layout */
+.tlat-funnel-grid {
+    display: grid;
+    grid-template-columns: 2fr 1fr;
+    gap: 24px;
+    margin-bottom: 24px;
+}
+
+@media (max-width: 1024px) {
+    .tlat-funnel-grid {
+        grid-template-columns: 1fr;
+    }
+}
+
+/* Chart Container */
+.tlat-funnel-chart-container {
+    background: #fff;
+    border-radius: 8px;
+    padding: 20px;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+.tlat-funnel-chart-container canvas {
+    height: 300px !important;
+}
+
+/* Stats Panel */
+.tlat-funnel-stats {
+    background: #fff;
+    border-radius: 8px;
+    padding: 20px;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+.tlat-metric-cards {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.tlat-metric-card {
+    padding: 16px;
+    background: #f8fafc;
+    border-radius: 8px;
+    border: 1px solid #e2e8f0;
+}
+
+.tlat-metric-card.highlight {
+    background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%);
+    color: #fff;
+    border: none;
+}
+
+.tlat-metric-value {
+    font-size: 28px;
+    font-weight: 700;
+    line-height: 1.2;
+}
+
+.tlat-metric-label {
+    font-size: 13px;
+    color: #64748b;
+    margin-top: 4px;
+}
+
+.tlat-metric-card.highlight .tlat-metric-label {
+    color: rgba(255, 255, 255, 0.8);
+}
+
+/* Drop-off Section */
+.tlat-dropoff-section,
+.tlat-recommendations-section {
+    background: #fff;
+    border-radius: 8px;
+    padding: 20px;
+    margin-bottom: 24px;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+.tlat-dropoff-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 14px;
+}
+
+.tlat-dropoff-table th {
+    text-align: left;
+    padding: 12px;
+    background: #f8fafc;
+    border-bottom: 2px solid #e2e8f0;
+    font-weight: 600;
+    color: #475569;
+}
+
+.tlat-dropoff-table td {
+    padding: 12px;
+    border-bottom: 1px solid #e2e8f0;
+}
+
+.tlat-dropoff-table tr:last-child td {
+    border-bottom: none;
+}
+
+.tlat-dropoff-table tr.critical td {
+    background: rgba(239, 68, 68, 0.05);
+}
+
+.tlat-dropoff-table tr.warning td {
+    background: rgba(245, 158, 11, 0.05);
+}
+
+.tlat-badge {
+    display: inline-block;
+    padding: 4px 8px;
+    border-radius: 4px;
+    font-size: 12px;
+    font-weight: 600;
+}
+
+.tlat-badge.critical {
+    background: #fef2f2;
+    color: #dc2626;
+}
+
+.tlat-badge.warning {
+    background: #fffbeb;
+    color: #d97706;
+}
+
+/* Recommendations */
+.tlat-recommendation {
+    display: flex;
+    gap: 16px;
+    padding: 16px;
+    border-radius: 8px;
+    margin-bottom: 12px;
+    align-items: flex-start;
+}
+
+.tlat-recommendation:last-child {
+    margin-bottom: 0;
+}
+
+.tlat-recommendation.warning {
+    background: #fffbeb;
+    border: 1px solid #fcd34d;
+}
+
+.tlat-recommendation.info {
+    background: #eff6ff;
+    border: 1px solid #93c5fd;
+}
+
+.tlat-recommendation.success {
+    background: #f0fdf4;
+    border: 1px solid #86efac;
+}
+
+.tlat-recommendation.error {
+    background: #fef2f2;
+    border: 1px solid #fca5a5;
+}
+
+.tlat-rec-icon {
+    font-size: 24px;
+    flex-shrink: 0;
+}
+
+.tlat-rec-content h4 {
+    font-size: 15px;
+    font-weight: 600;
+    margin: 0 0 6px 0;
+    color: #1e293b;
+}
+
+.tlat-rec-content p {
+    font-size: 14px;
+    color: #64748b;
+    margin: 0 0 12px 0;
+    line-height: 1.5;
+}
+
+.tlat-rec-content .button {
+    margin: 0;
+}
+
+/* Loading & Errors */
+.tlat-loading {
+    text-align: center;
+    padding: 40px;
+    color: #64748b;
+}
+
+.tlat-error {
+    padding: 16px;
+    background: #fef2f2;
+    color: #dc2626;
+    border-radius: 8px;
+    text-align: center;
+}
+
+.tlat-no-data {
+    text-align: center;
+    padding: 40px;
+    color: #94a3b8;
+    font-style: italic;
+}

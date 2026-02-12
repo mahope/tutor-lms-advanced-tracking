@@ -28,6 +28,11 @@ define('TUTOR_ADVANCED_TRACKING_PLUGIN_FILE', __FILE__);
 define('TUTOR_ADVANCED_TRACKING_PLUGIN_DIR', plugin_dir_path(__FILE__));
 define('TUTOR_ADVANCED_TRACKING_PLUGIN_URL', plugin_dir_url(__FILE__));
 
+// Aliases for shorter constant names
+define('TLAT_VERSION', TUTOR_ADVANCED_TRACKING_VERSION);
+define('TLAT_PLUGIN_DIR', TUTOR_ADVANCED_TRACKING_PLUGIN_DIR);
+define('TLAT_PLUGIN_URL', TUTOR_ADVANCED_TRACKING_PLUGIN_URL);
+
 /**
  * Main plugin class
  */
@@ -86,9 +91,11 @@ class TutorAdvancedTracking {
      * Load required files
      */
     private function load_files() {
-        $required_files
-        [] = 'includes/class-events-db.php';
-        [] = 'includes/class-cli.php';
+        $required_files = array(
+            'includes/class-events-db.php',
+            'includes/class-cli.php',
+            'includes/class-funnel-dashboard.php',
+        );
         
         foreach ($required_files as $file) {
             $filepath = TUTOR_ADVANCED_TRACKING_PLUGIN_DIR . $file;
@@ -122,7 +129,8 @@ class TutorAdvancedTracking {
             'TutorAdvancedTracking_API',
             'TutorAdvancedTracking_Admin',
             'TutorAdvancedTracking_Engagement',
-            'TutorAdvancedTracking_CohortAnalytics'
+            'TutorAdvancedTracking_CohortAnalytics',
+            'TutorAdvancedTracking_Funnel_Dashboard'
         );
         
         foreach ($components as $component) {

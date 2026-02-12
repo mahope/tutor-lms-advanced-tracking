@@ -12,7 +12,7 @@
 - [x] Launch-plan: versioning, changelog, release checklist, support-templates (done: 2026-02-12 17:50)
 
 ## New Features (2026-02-12)
-- [ ] Kursus-funnel dashboard (enroll → start → complete) med drop-off analyse
+- [x] Kursus-funnel dashboard (enroll → start → complete) med drop-off analyse — completed 2026-02-12 19:30 CET
 - [ ] Segmenter pr. brugergruppe (role, kursus, aktivitet) + filtrerbare grafer
 - [ ] Real-time session-tracking (heartbeat) med "aktive elever nu"
 - [ ] Alerting: e-mail/Slack ved fald i completion >X% uge/uge
