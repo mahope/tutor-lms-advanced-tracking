@@ -56,7 +56,7 @@
 - [x] License aktiverings-flow i admin (enter key → validate → activate)
 - [x] Graceful degradation når licens udløber (14-dages grace period)
 - [x] Loading states på alle dashboard charts
-- [ ] Responsive fixes til admin UI på tablet
+- [x] Responsive fixes til admin UI på tablet
 
 ### Auto-Update System
 - [ ] Update-server endpoint på licensserveren (/api/v1/update/check)
