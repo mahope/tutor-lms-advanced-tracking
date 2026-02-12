@@ -59,10 +59,10 @@
 - [x] Responsive fixes til admin UI på tablet
 
 ### Auto-Update System
-- [ ] Update-server endpoint på licensserveren (/api/v1/update/check)
-- [ ] JSON manifest med version, changelog, download URL
-- [ ] Implementer update checker i plugin (pre_set_site_transient_update_plugins)
-- [ ] Signed zip downloads (hash verification)
+- [x] Update-server endpoint på licensserveren (/api/v1/update/check)
+- [x] JSON manifest med version, changelog, download URL
+- [x] Implementer update checker i plugin (pre_set_site_transient_update_plugins)
+- [x] Signed zip downloads (hash verification)
 
 ### Testing
 - [ ] Unit tests for license validator (PHPUnit)
