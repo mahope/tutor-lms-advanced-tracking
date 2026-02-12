@@ -17,4 +17,4 @@ jobs:
           if [ ${#files[@]} -eq 0 ]; then
             echo "No PHP files found"; exit 0; fi
           echo "Checking ${#files[@]} PHP files..."
-          printf %s0 "${files[@]}" | xargs -0 -n1 -P4 php -l
+          printf '%s\0' "${files[@]}" | xargs -0 -n1 -P4 php -l
