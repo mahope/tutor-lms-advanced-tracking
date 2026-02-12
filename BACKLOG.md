@@ -1,6 +1,6 @@
 # Tutor LMS Advanced Tracking — Backlog (v1)
 
-- [ ] Produktdefinition: afgræns MVP-metrics (lesson views, completion, time-on-lesson, quiz detail) og datakilder (Tutor LMS hooks)
+- [x] - [ ] Produktdefinition: afgræns MVP-metrics (lesson views, completion, time-on-lesson, quiz detail) og datakilder (Tutor LMS hooks) — completed 2026-02-12 14:15
 - [ ] Licensmodel: årlig licens + domain checks (LemonSqueezy/WOOREST), simple license validator
 - [ ] Admin-UI: oversigtsside med grafer (Chart.js) + eksport (CSV)
 - [ ] Data-layer: events/DB-schema (custom tables vs postmeta), migrator, uninstaller
