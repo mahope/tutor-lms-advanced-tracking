@@ -9,4 +9,4 @@
 - [x] Telemetry (opt-in): anonym brugstælling, crash logs (WP options + remote endpoint) — completed 2026-02-12 16:46
 - [x] Docs/README: install, setup, screenshots, hooks/filters reference — completed 2026-02-12 17:07 CET
 - [x] Demo-video (2 min): key value prop + UI-walkthrough (script outline) — done: 2026-02-12 17:30
-- [ ] Launch-plan: versioning, changelog, release checklist, support-templates
+- [x] Launch-plan: versioning, changelog, release checklist, support-templates (done: 2026-02-12 17:50)
