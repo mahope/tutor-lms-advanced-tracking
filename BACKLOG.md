@@ -13,7 +13,7 @@
 
 ## New Features (2026-02-12)
 - [x] Kursus-funnel dashboard (enroll → start → complete) med drop-off analyse — completed 2026-02-12 19:30 CET
-- [ ] Segmenter pr. brugergruppe (role, kursus, aktivitet) + filtrerbare grafer
+- [x] Segmenter pr. brugergruppe (role, kursus, aktivitet) + filtrerbare grafer — completed 2026-02-12 19:45 CET
 - [ ] Real-time session-tracking (heartbeat) med "aktive elever nu"
 - [ ] Alerting: e-mail/Slack ved fald i completion >X% uge/uge
 - [ ] Eksport til CSV/JSON pr. kursus/lektioneniveau (inkl. quiz metrics)

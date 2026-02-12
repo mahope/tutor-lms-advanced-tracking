@@ -1,0 +1,195 @@
+/**
+ * Segment Filter UI Styles
+ * 
+ * @package TutorLMS_Advanced_Tracking
+ * @since 1.1.0
+ */
+
+.tlat-segment-filter {
+    background: #fff;
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    padding: 16px;
+    margin-bottom: 20px;
+}
+
+.tlat-filter-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 12px;
+}
+
+.tlat-filter-header h4 {
+    margin: 0;
+    font-size: 14px;
+    font-weight: 600;
+    color: #1e1e1e;
+}
+
+.tlat-add-filter {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+}
+
+.tlat-add-filter .dashicons {
+    font-size: 16px;
+    width: 16px;
+    height: 16px;
+}
+
+/* Active Filters */
+.tlat-active-filters {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-bottom: 12px;
+}
+
+.tlat-filter-tag {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    background: #f0f6fc;
+    border: 1px solid #c8d8e8;
+    border-radius: 16px;
+    padding: 4px 8px 4px 12px;
+    font-size: 13px;
+    color: #0a4b78;
+}
+
+.tlat-filter-tag .dashicons {
+    font-size: 14px;
+    width: 14px;
+    height: 14px;
+    opacity: 0.7;
+}
+
+.tlat-remove-filter {
+    background: none;
+    border: none;
+    color: #0a4b78;
+    cursor: pointer;
+    font-size: 16px;
+    line-height: 1;
+    padding: 2px 4px;
+    opacity: 0.6;
+    transition: opacity 0.2s;
+}
+
+.tlat-remove-filter:hover {
+    opacity: 1;
+}
+
+/* Filter Builder */
+.tlat-filter-builder {
+    display: flex;
+    gap: 8px;
+    align-items: center;
+    flex-wrap: wrap;
+    padding: 12px;
+    background: #f9f9f9;
+    border-radius: 6px;
+    margin-bottom: 12px;
+}
+
+.tlat-filter-builder select {
+    min-width: 180px;
+    padding: 6px 10px;
+}
+
+/* Filter Actions */
+.tlat-filter-actions {
+    display: flex;
+    gap: 8px;
+    padding-top: 12px;
+    border-top: 1px solid #eee;
+}
+
+.tlat-save-segment {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+}
+
+.tlat-save-segment .dashicons {
+    font-size: 16px;
+    width: 16px;
+    height: 16px;
+}
+
+/* Segment Stats */
+.tlat-segment-stats {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+    gap: 12px;
+    margin-top: 12px;
+    padding-top: 12px;
+    border-top: 1px solid #eee;
+}
+
+.tlat-segment-stat {
+    text-align: center;
+    padding: 8px;
+    background: #f9f9f9;
+    border-radius: 6px;
+}
+
+.tlat-segment-stat-value {
+    font-size: 24px;
+    font-weight: 700;
+    color: #3b82f6;
+}
+
+.tlat-segment-stat-label {
+    font-size: 12px;
+    color: #666;
+    margin-top: 4px;
+}
+
+/* Comparison Mode */
+.tlat-comparison-toggle {
+    margin-left: auto;
+}
+
+.tlat-comparison-legend {
+    display: flex;
+    gap: 16px;
+    margin-top: 12px;
+    font-size: 13px;
+}
+
+.tlat-comparison-legend-item {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.tlat-comparison-legend-color {
+    width: 12px;
+    height: 12px;
+    border-radius: 2px;
+}
+
+/* Responsive */
+@media (max-width: 782px) {
+    .tlat-filter-header {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 8px;
+    }
+    
+    .tlat-filter-builder {
+        flex-direction: column;
+        align-items: stretch;
+    }
+    
+    .tlat-filter-builder select {
+        width: 100%;
+    }
+    
+    .tlat-filter-actions {
+        flex-direction: column;
+    }
+}
