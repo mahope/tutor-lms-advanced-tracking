@@ -18,7 +18,7 @@
 - [x] Implementer endpoints: /activate, /deactivate, /validate, /heartbeat
 - [x] JWT-baserede licensnøgler med claims (plan, domain, expiry)
 - [x] Integrer med class-license-validator.php (API kald til licensserver)
-- [ ] Admin UI: Licensindstillinger side i WP
+- [x] Admin UI: Licensindstillinger side i WP (Settings → TLAT License)
 
 ### Auto-Update (Prioritet 2)
 - [ ] Opret update-server endpoint (JSON manifest + zip URL)
