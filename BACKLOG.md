@@ -65,8 +65,8 @@
 - [x] Signed zip downloads (hash verification)
 
 ### Testing
-- [ ] Unit tests for license validator (PHPUnit)
-- [ ] Integration test: aktivering → deaktivering → reaktivering
+- [x] Unit tests for license validator (PHPUnit)
+- [x] Integration test: aktivering → deaktivering → reaktivering
 - [ ] Test på WordPress 6.4, 6.5, 6.6
 - [ ] Test med Tutor LMS Free + Pro
 

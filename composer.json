@@ -1,0 +1,39 @@
+{
+    "name": "mahope/tutor-lms-advanced-tracking",
+    "description": "Advanced tracking and analytics for Tutor LMS",
+    "type": "wordpress-plugin",
+    "license": "GPL-2.0-or-later",
+    "authors": [
+        {
+            "name": "Mads Holst Jensen",
+            "email": "mads@mahope.dk"
+        }
+    ],
+    "require": {
+        "php": ">=7.4"
+    },
+    "require-dev": {
+        "phpunit/phpunit": "^9.6",
+        "yoast/phpunit-polyfills": "^2.0",
+        "brain/monkey": "^2.6"
+    },
+    "autoload": {
+        "classmap": [
+            "includes/"
+        ]
+    },
+    "autoload-dev": {
+        "psr-4": {
+            "TLAT\\Tests\\": "tests/"
+        }
+    },
+    "scripts": {
+        "test": "phpunit",
+        "test:coverage": "phpunit --coverage-text"
+    },
+    "config": {
+        "allow-plugins": {
+            "dealerdirect/phpcodesniffer-composer-installer": true
+        }
+    }
+}
