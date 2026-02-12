@@ -14,7 +14,7 @@
 ## In Progress / To Do
 
 ### Licensserver (Prioritet 1)
-- [ ] Opret separat licensserver repo (Node.js/Express + SQLite)
+- [x] Opret separat licensserver repo (Node.js/Express + SQLite) → /repos/tlat-license-server/
 - [ ] Implementer endpoints: /activate, /deactivate, /validate, /heartbeat
 - [ ] JWT-baserede licensnøgler med claims (plan, domain, expiry)
 - [ ] Integrer med class-license-validator.php (API kald til licensserver)
