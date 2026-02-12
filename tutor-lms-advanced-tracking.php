@@ -74,6 +74,10 @@ class TutorAdvancedTracking {
         // Ensure legacy Tutor LMS tables are mapped across versions
         TutorAdvancedTracking_TutorIntegration::ensure_table_alias_filter();
         
+        // Initialize license system
+        TLAT_License_Validator::init();
+        TLAT_License_Settings::init();
+        
         // Initialize components
         $this->init_components();
         
@@ -95,6 +99,8 @@ class TutorAdvancedTracking {
             'includes/class-events-db.php',
             'includes/class-cli.php',
             'includes/class-funnel-dashboard.php',
+            'includes/class-license-validator.php',
+            'includes/class-license-settings.php',
         );
         
         foreach ($required_files as $file) {
@@ -232,6 +238,11 @@ class TutorAdvancedTracking {
      * Plugin deactivation
      */
     public function deactivate() {
+        // Clean up license cron
+        if ( class_exists( 'TLAT_License_Validator' ) ) {
+            TLAT_License_Validator::deactivate_plugin();
+        }
+        
         // Clean up any temporary data
         flush_rewrite_rules();
     }
