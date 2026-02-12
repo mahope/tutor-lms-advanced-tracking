@@ -17,7 +17,7 @@
 - [x] Opret separat licensserver repo (Node.js/Express + SQLite) → /repos/tlat-license-server/
 - [x] Implementer endpoints: /activate, /deactivate, /validate, /heartbeat
 - [x] JWT-baserede licensnøgler med claims (plan, domain, expiry)
-- [ ] Integrer med class-license-validator.php (API kald til licensserver)
+- [x] Integrer med class-license-validator.php (API kald til licensserver)
 - [ ] Admin UI: Licensindstillinger side i WP
 
 ### Auto-Update (Prioritet 2)
