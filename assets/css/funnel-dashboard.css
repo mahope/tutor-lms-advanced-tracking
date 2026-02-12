@@ -57,9 +57,105 @@
     margin-bottom: 24px;
 }
 
-@media (max-width: 1024px) {
+/* Responsive - Tablet */
+@media (min-width: 769px) and (max-width: 1024px) {
     .tlat-funnel-grid {
         grid-template-columns: 1fr;
+        gap: 20px;
+    }
+    
+    .tlat-funnel-wrap {
+        padding: 15px;
+    }
+    
+    .tlat-funnel-filters {
+        flex-wrap: wrap;
+        gap: 10px;
+    }
+    
+    .tlat-select {
+        min-width: 160px;
+        padding: 7px 10px;
+        font-size: 13px;
+    }
+    
+    .tlat-funnel-chart-container,
+    .tlat-funnel-stats {
+        padding: 15px;
+    }
+    
+    .tlat-metric-card {
+        padding: 12px;
+    }
+    
+    .tlat-metric-value {
+        font-size: 24px;
+    }
+    
+    .tlat-metric-label {
+        font-size: 12px;
+    }
+    
+    .tlat-dropoff-section,
+    .tlat-recommendations-section {
+        padding: 15px;
+    }
+    
+    .tlat-dropoff-table th,
+    .tlat-dropoff-table td {
+        padding: 10px;
+        font-size: 13px;
+    }
+    
+    .tlat-recommendation {
+        padding: 14px;
+        gap: 12px;
+    }
+    
+    .tlat-rec-icon {
+        font-size: 20px;
+    }
+    
+    .tlat-rec-content h4 {
+        font-size: 14px;
+    }
+    
+    .tlat-rec-content p {
+        font-size: 13px;
+    }
+}
+
+/* Responsive - Mobile */
+@media (max-width: 768px) {
+    .tlat-funnel-grid {
+        grid-template-columns: 1fr;
+    }
+    
+    .tlat-funnel-wrap {
+        padding: 10px;
+    }
+    
+    .tlat-funnel-filters {
+        flex-direction: column;
+        align-items: stretch;
+    }
+    
+    .tlat-select {
+        width: 100%;
+    }
+    
+    .tlat-metric-cards {
+        gap: 10px;
+    }
+    
+    .tlat-recommendation {
+        flex-direction: column;
+        gap: 10px;
+    }
+    
+    .tlat-dropoff-table {
+        display: block;
+        overflow-x: auto;
     }
 }
 

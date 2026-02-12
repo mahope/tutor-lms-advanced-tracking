@@ -343,4 +343,70 @@ $avg_quiz_score = $courses ? round(array_sum(array_column($courses, 'avg_quiz_sc
     color: #721c24;
     font-weight: 600;
 }
+
+/* Tablet Responsive */
+@media (min-width: 769px) and (max-width: 1024px) {
+    .tutor-admin-card {
+        padding: 15px;
+    }
+    
+    .tutor-admin-card h3 {
+        font-size: 16px;
+    }
+    
+    .course-activity-item {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 5px;
+    }
+    
+    .activity-stats {
+        font-size: 11px;
+    }
+    
+    .quick-actions .tutor-btn {
+        font-size: 13px;
+        padding: 8px 12px;
+    }
+    
+    .health-item {
+        font-size: 13px;
+    }
+    
+    .courses-table th,
+    .courses-table td {
+        padding: 10px 8px;
+        font-size: 13px;
+    }
+    
+    .tutor-progress {
+        height: 16px;
+    }
+    
+    .status-badge {
+        font-size: 10px;
+        padding: 2px 6px;
+    }
+}
+
+/* Mobile Responsive */
+@media (max-width: 768px) {
+    .course-activity-item {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 5px;
+    }
+    
+    .courses-table {
+        overflow-x: auto;
+    }
+    
+    .courses-table table {
+        min-width: 500px;
+    }
+    
+    .quick-actions .tutor-btn {
+        width: 100%;
+    }
+}
 </style>

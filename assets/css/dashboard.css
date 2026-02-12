@@ -427,7 +427,37 @@
     border-color: #adb5bd;
 }
 
-/* Responsive Charts */
+/* Responsive Charts - Tablet */
+@media (min-width: 769px) and (max-width: 1024px) {
+    .charts-grid {
+        grid-template-columns: repeat(2, 1fr);
+        gap: 15px;
+    }
+    
+    .chart-container {
+        min-height: 280px;
+        padding: 15px;
+    }
+    
+    .chart-container canvas {
+        max-height: 220px;
+    }
+    
+    .chart-container h4 {
+        font-size: 15px;
+    }
+    
+    .chart-controls {
+        gap: 8px;
+    }
+    
+    .chart-controls select {
+        padding: 5px 10px;
+        font-size: 13px;
+    }
+}
+
+/* Responsive Charts - Mobile */
 @media (max-width: 768px) {
     .charts-grid {
         grid-template-columns: 1fr;
@@ -1624,7 +1654,162 @@
     margin-right: 10px;
 }
 
-/* Responsive Design */
+/* Responsive Design - Tablet */
+@media (min-width: 769px) and (max-width: 1024px) {
+    .tutor-advanced-tracking-dashboard,
+    .tutor-advanced-tracking-course-details,
+    .tutor-advanced-tracking-user-details {
+        padding: 15px;
+    }
+    
+    .dashboard-header,
+    .course-header,
+    .user-header {
+        flex-direction: column;
+        gap: 15px;
+    }
+    
+    .dashboard-header h2,
+    .course-header h2,
+    .user-header h2 {
+        font-size: 26px;
+    }
+    
+    .export-buttons {
+        width: 100%;
+        justify-content: flex-start;
+        margin-left: 0;
+    }
+    
+    .dashboard-stats-overview,
+    .course-stats-overview,
+    .user-stats-overview {
+        grid-template-columns: repeat(2, 1fr);
+        gap: 15px;
+    }
+    
+    .stats-card {
+        padding: 15px;
+    }
+    
+    .stats-number {
+        font-size: 28px;
+    }
+    
+    .dashboard-search {
+        flex-wrap: wrap;
+    }
+    
+    .dashboard-search input {
+        min-width: 200px;
+    }
+    
+    /* Tables - Tablet */
+    .courses-table,
+    .students-table,
+    .quiz-performance-table {
+        overflow-x: auto;
+    }
+    
+    .courses-table table,
+    .students-table table,
+    .quiz-performance-table table {
+        min-width: 600px;
+    }
+    
+    .courses-table th,
+    .students-table th,
+    .quiz-performance-table th,
+    .courses-table td,
+    .students-table td,
+    .quiz-performance-table td {
+        padding: 12px;
+        font-size: 13px;
+    }
+    
+    /* Quiz Cards - Tablet */
+    .quizzes-grid {
+        grid-template-columns: repeat(2, 1fr);
+        gap: 15px;
+    }
+    
+    .quiz-card {
+        padding: 15px;
+    }
+    
+    .quiz-card h4 {
+        font-size: 16px;
+    }
+    
+    /* Analytics - Tablet */
+    .analytics-section {
+        padding: 20px;
+    }
+    
+    .analytics-nav ul {
+        flex-wrap: wrap;
+        gap: 10px;
+    }
+    
+    .analytics-nav .nav-link {
+        padding: 8px 15px;
+        font-size: 14px;
+    }
+    
+    .engagement-grid,
+    .time-analytics-grid,
+    .dropout-grid {
+        grid-template-columns: repeat(2, 1fr);
+    }
+    
+    .time-charts {
+        grid-template-columns: 1fr;
+        gap: 20px;
+    }
+    
+    .daily-chart,
+    .hourly-chart {
+        height: 180px;
+        padding: 15px;
+    }
+    
+    .risk-bars {
+        flex-wrap: wrap;
+    }
+    
+    .risk-bar {
+        flex: 1 1 calc(33% - 15px);
+        min-width: 120px;
+    }
+    
+    .priority-item {
+        flex-wrap: wrap;
+    }
+    
+    /* Funnel - Tablet */
+    .funnel-container {
+        max-width: 100%;
+    }
+    
+    .funnel-step {
+        padding: 12px;
+    }
+    
+    .funnel-step-header h4 {
+        font-size: 15px;
+    }
+    
+    /* Cohorts - Tablet */
+    .cohorts-table {
+        overflow-x: auto;
+    }
+    
+    .cohorts-table table {
+        min-width: 500px;
+    }
+}
+
+/* Responsive Design - Mobile */
 @media (max-width: 768px) {
     .dashboard-stats-overview,
     .course-stats-overview,

@@ -172,7 +172,37 @@
     border-radius: 2px;
 }
 
-/* Responsive */
+/* Responsive - Tablet */
+@media (min-width: 783px) and (max-width: 1024px) {
+    .tlat-segment-filter {
+        padding: 14px;
+    }
+    
+    .tlat-filter-builder {
+        gap: 6px;
+    }
+    
+    .tlat-filter-builder select {
+        min-width: 150px;
+        padding: 5px 8px;
+        font-size: 13px;
+    }
+    
+    .tlat-segment-stats {
+        grid-template-columns: repeat(2, 1fr);
+    }
+    
+    .tlat-segment-stat-value {
+        font-size: 20px;
+    }
+    
+    .tlat-filter-tag {
+        font-size: 12px;
+        padding: 3px 6px 3px 10px;
+    }
+}
+
+/* Responsive - Mobile */
 @media (max-width: 782px) {
     .tlat-filter-header {
         flex-direction: column;
