@@ -370,3 +370,6 @@ class TutorAdvancedTracking {
 
 // Initialize the plugin
 new TutorAdvancedTracking();
+
+// Load WP-CLI commands if available
+if ( defined("WP_CLI") && WP_CLI ) { require __DIR__ . "/includes/cli.php"; }
