@@ -1,0 +1,20 @@
+name: PHP Lint
+on:
+  push:
+  pull_request:
+jobs:
+  lint:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: shivammathur/setup-php@v2
+        with:
+          php-version: 8.2
+      - name: Syntax check
+        run: |
+          set -e
+          mapfile -t files < <(git ls-files "*.php")
+          if [ ${#files[@]} -eq 0 ]; then
+            echo "No PHP files found"; exit 0; fi
+          echo "Checking ${#files[@]} PHP files..."
+          printf %s0 "${files[@]}" | xargs -0 -n1 -P4 php -l
