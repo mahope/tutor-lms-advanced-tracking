@@ -1,6 +1,14 @@
 # Tutor LMS Advanced Tracking — Backlog
 
-## Completed
+> **Produkt:** WordPress plugin til avanceret kursus-analytics for Tutor LMS
+> **Revenue model:** LTD $99/€99, Årlig licens $15/€15
+> **Target:** Tutor LMS brugere der vil have bedre insights
+
+---
+
+## ✅ Completed
+
+### Core Plugin
 - [x] MVP metrics definition (docs/MVP-metrics.md)
 - [x] License validator scaffold (includes/class-license-validator.php)
 - [x] Admin UI with Chart.js (includes/class-charts.php, class-dashboard.php)
@@ -11,34 +19,95 @@
 - [x] REST API endpoints (includes/class-api.php)
 - [x] Compatibility docs (docs/COMPATIBILITY.md)
 
-## In Progress / To Do
+### Licensserver
+- [x] Separat licensserver repo (/repos/tlat-license-server/)
+- [x] Endpoints: /activate, /deactivate, /validate, /heartbeat
+- [x] JWT-baserede licensnøgler med claims
+- [x] SQLite database med WAL mode
+- [x] Integrer med class-license-validator.php
 
-### Licensserver (Prioritet 1)
-- [x] Opret separat licensserver repo (Node.js/Express + SQLite) → /repos/tlat-license-server/
-- [x] Implementer endpoints: /activate, /deactivate, /validate, /heartbeat
-- [x] JWT-baserede licensnøgler med claims (plan, domain, expiry)
-- [x] Integrer med class-license-validator.php (API kald til licensserver)
-- [x] Admin UI: Licensindstillinger side i WP (Settings → TLAT License)
+---
 
-### Auto-Update (Prioritet 2)
-- [ ] Opret update-server endpoint (JSON manifest + zip URL)
-- [ ] Implementer update checker i plugin (hook til wp_update_plugins)
-- [ ] Version bump og changelog workflow
+## 🚀 Phase 1: Launch Ready (Prioritet 1)
 
-### UI/UX Polish (Prioritet 3)
-- [ ] Tilføj loading states til dashboard charts
-- [ ] Responsive design fixes til admin UI
-- [ ] Export modal med format-valg (CSV/JSON/PDF)
-- [ ] Inline help tooltips på dashboard
+### Licensserver Deployment
+- [ ] Deploy tlat-license-server til Dokploy (license.tutor-tracking.com)
+- [ ] Sæt op HTTPS med Let's Encrypt
+- [ ] Tilføj rate limiting (express-rate-limit)
+- [ ] Monitoring: uptime check + error alerts
+- [ ] Backup cron for SQLite database
 
-### Dokumentation & Marketing
-- [ ] Screenshots til docs/screenshots/ (admin UI, charts, export)
-- [ ] Video script til 2-min demo (docs/demo-script.md exists)
-- [ ] Landing page tekst + feature list
-- [ ] Pricing page (LTD $99, Årlig $15)
+### Plugin Polish
+- [ ] Admin UI: Licensindstillinger side (Settings → TLAT License)
+- [ ] License aktiverings-flow i admin (enter key → validate → activate)
+- [ ] Graceful degradation når licens udløber (14-dages grace period)
+- [ ] Loading states på alle dashboard charts
+- [ ] Responsive fixes til admin UI på tablet
 
-### Avancerede Features (Later)
-- [ ] Webhooks til eksterne systemer (Zapier/Make)
+### Auto-Update System
+- [ ] Update-server endpoint på licensserveren (/api/v1/update/check)
+- [ ] JSON manifest med version, changelog, download URL
+- [ ] Implementer update checker i plugin (pre_set_site_transient_update_plugins)
+- [ ] Signed zip downloads (hash verification)
+
+### Testing
+- [ ] Unit tests for license validator (PHPUnit)
+- [ ] Integration test: aktivering → deaktivering → reaktivering
+- [ ] Test på WordPress 6.4, 6.5, 6.6
+- [ ] Test med Tutor LMS Free + Pro
+
+---
+
+## 📈 Phase 2: Launch & Marketing (Prioritet 2)
+
+### Sales Infrastructure
+- [ ] Landing page på tutor-tracking.com (Next.js eller WordPress)
+- [ ] Stripe checkout integration (LTD + Annual options)
+- [ ] License delivery email (SendGrid/Resend)
+- [ ] Customer portal: se licenser, download, support
+
+### Marketing Assets
+- [ ] Screenshots til docs/screenshots/ (min 5 forskellige views)
+- [ ] 2-min demo video (screen recording + voiceover)
+- [ ] Feature comparison table (Free vs Pro hvis relevant)
+- [ ] Pricing page med FAQ
+
+### Launch Outreach
+- [ ] Tutor LMS Facebook group post
+- [ ] r/Wordpress post
+- [ ] ProductHunt launch forberedelse
+- [ ] 10 relevante blogs til guest post/review outreach
+
+### Analytics
+- [ ] Plausible på landing page (analytics.holstjensen.eu)
+- [ ] Event tracking: demo_clicked, pricing_viewed, checkout_started
+- [ ] License activation tracking i admin
+
+---
+
+## 🔧 Phase 3: Growth Features (Prioritet 3)
+
+### Advanced Features
+- [ ] Webhooks til Zapier/Make (kursus fuldført, ny bruger, etc.)
+- [ ] Scheduled email reports (ugentlig/månedlig PDF til admin)
+- [ ] Goal tracking (sæt mål for completion rate, alert ved afvigelse)
 - [ ] Multisite network dashboard
-- [ ] Scheduled email reports (ugentlig PDF)
-- [ ] BigQuery export integration
+
+### Integrations
+- [ ] WooCommerce Subscriptions integration (renewal tracking)
+- [ ] LearnDash data import (migrering fra konkurrent)
+- [ ] Google Analytics 4 event push
+- [ ] BigQuery export til enterprise kunder
+
+### Premium Tier
+- [ ] Definer "Pro" vs "Agency" features
+- [ ] White-label option for agencies ($299 LTD)
+- [ ] Priority support tier
+
+---
+
+## 📝 Notes
+
+**Licensserver:** `/repos/tlat-license-server/`
+**Key format:** `TLAT-XXXX-XXXX-XXXX-XXXX`
+**Grace period:** 14 dage offline tolerance
