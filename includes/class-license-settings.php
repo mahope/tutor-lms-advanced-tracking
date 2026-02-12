@@ -237,10 +237,13 @@ if ( ! class_exists( 'TLAT_License_Settings' ) ) {
 				wp_die( __( 'Permission denied', 'tutor-lms-advanced-tracking' ) );
 			}
 
-			$status      = TLAT_License_Validator::get_status();
-			$is_valid    = ! empty( $status['valid'] );
-			$license_key = get_option( TLAT_License_Validator::OPTION_KEY, '' );
-			$server_url  = TLAT_License_Validator::get_server_url();
+			$status           = TLAT_License_Validator::get_status();
+			$is_strictly_valid = ! empty( $status['valid'] );
+			$is_valid         = TLAT_License_Validator::is_valid(); // Includes grace period
+			$license_key      = get_option( TLAT_License_Validator::OPTION_KEY, '' );
+			$server_url       = TLAT_License_Validator::get_server_url();
+			$grace_info       = TLAT_License_Validator::get_grace_period_info();
+			$in_grace_period  = ! empty( $grace_info['active'] );
 
 			// Determine status display
 			$status_class = 'warning';
@@ -248,11 +251,27 @@ if ( ! class_exists( 'TLAT_License_Settings' ) ) {
 			$status_title = __( 'No License', 'tutor-lms-advanced-tracking' );
 			$status_desc  = __( 'Enter your license key to activate.', 'tutor-lms-advanced-tracking' );
 
-			if ( $is_valid ) {
+			if ( $is_strictly_valid ) {
 				$status_class = 'valid';
 				$status_icon  = '✅';
 				$status_title = __( 'License Active', 'tutor-lms-advanced-tracking' );
 				$status_desc  = $status['message'] ?? __( 'Your license is valid and active.', 'tutor-lms-advanced-tracking' );
+			} elseif ( $in_grace_period ) {
+				// In grace period
+				$days_left    = $grace_info['days_left'];
+				$status_class = $days_left <= 3 ? 'invalid' : 'warning';
+				$status_icon  = '⏳';
+				$status_title = __( 'Grace Period Active', 'tutor-lms-advanced-tracking' );
+				$status_desc  = sprintf(
+					/* translators: %d: number of days remaining */
+					_n(
+						'Plugin continues working. %d day remaining to renew.',
+						'Plugin continues working. %d days remaining to renew.',
+						$days_left,
+						'tutor-lms-advanced-tracking'
+					),
+					$days_left
+				);
 			} elseif ( ! empty( $license_key ) ) {
 				$status_class = 'invalid';
 				$status_icon  = '❌';
@@ -283,7 +302,40 @@ if ( ! class_exists( 'TLAT_License_Settings' ) ) {
 							</div>
 						</div>
 
-						<?php if ( $is_valid ) : ?>
+						<?php if ( $in_grace_period ) : ?>
+							<!-- Grace Period Warning -->
+							<div class="tlat-license-grace-warning" style="background:#fff3cd;border:1px solid #ffc107;border-radius:4px;padding:15px;margin-bottom:20px;">
+								<h4 style="margin:0 0 10px 0;color:#856404;">
+									⏳ <?php esc_html_e( 'Grace Period Active', 'tutor-lms-advanced-tracking' ); ?>
+								</h4>
+								<p style="margin:0 0 10px 0;color:#856404;">
+									<?php
+									echo esc_html( sprintf(
+										/* translators: 1: days remaining, 2: total days */
+										__( 'Your license is invalid, but the plugin will continue working for %1$d more day(s). This is a %2$d-day grace period to allow you time to renew or fix any license issues.', 'tutor-lms-advanced-tracking' ),
+										$grace_info['days_left'],
+										$grace_info['total_days']
+									) );
+									?>
+								</p>
+								<!-- Progress bar -->
+								<div style="background:#e0e0e0;border-radius:4px;height:8px;overflow:hidden;margin-bottom:10px;">
+									<div style="background:#ffc107;height:100%;width:<?php echo esc_attr( ( $grace_info['days_elapsed'] / $grace_info['total_days'] ) * 100 ); ?>%;transition:width 0.3s;"></div>
+								</div>
+								<p style="margin:0;font-size:12px;color:#666;">
+									<?php
+									echo esc_html( sprintf(
+										/* translators: 1: days elapsed, 2: total days */
+										__( 'Day %1$d of %2$d', 'tutor-lms-advanced-tracking' ),
+										$grace_info['days_elapsed'],
+										$grace_info['total_days']
+									) );
+									?>
+								</p>
+							</div>
+						<?php endif; ?>
+
+						<?php if ( $is_strictly_valid ) : ?>
 							<!-- Active license info -->
 							<?php if ( ! empty( $status['license'] ) ) : $lic = $status['license']; ?>
 							<div class="tlat-license-info">
@@ -328,6 +380,54 @@ if ( ! class_exists( 'TLAT_License_Settings' ) ) {
 									<?php echo esc_html( sprintf( __( 'Last checked: %s', 'tutor-lms-advanced-tracking' ), $last_checked ) ); ?>
 								</p>
 								<?php endif; ?>
+							</div>
+
+						<?php elseif ( $in_grace_period ) : ?>
+							<!-- Grace period: show both reactivate form and current key -->
+							<div class="tlat-license-actions">
+								<form method="post" class="tlat-license-form">
+									<?php wp_nonce_field( self::NONCE_ACTION, 'tlat_license_nonce' ); ?>
+									<input type="hidden" name="tlat_action" value="activate">
+									<p>
+										<strong><?php esc_html_e( 'Current Key:', 'tutor-lms-advanced-tracking' ); ?></strong>
+										<code><?php echo esc_html( substr( $license_key, 0, 9 ) . '••••••••••••' ); ?></code>
+									</p>
+									<p>
+										<label for="tlat_license_key">
+											<?php esc_html_e( 'Enter a new or renewed license key:', 'tutor-lms-advanced-tracking' ); ?>
+										</label>
+									</p>
+									<p>
+										<input 
+											type="text" 
+											id="tlat_license_key" 
+											name="tlat_license_key" 
+											value=""
+											placeholder="TLAT-XXXX-XXXX-XXXX-XXXX"
+											autocomplete="off"
+											spellcheck="false"
+										>
+									</p>
+									<p>
+										<button type="submit" class="button button-primary">
+											<?php esc_html_e( 'Activate New License', 'tutor-lms-advanced-tracking' ); ?>
+										</button>
+										<button type="submit" name="tlat_action" value="refresh" class="button">
+											<?php esc_html_e( 'Retry Current License', 'tutor-lms-advanced-tracking' ); ?>
+										</button>
+									</p>
+								</form>
+								<p style="margin-top:15px;color:#666;font-size:13px;">
+									<?php
+									printf(
+										/* translators: %s: purchase/renew link */
+										esc_html__( 'Need to renew? %s', 'tutor-lms-advanced-tracking' ),
+										'<a href="https://mahope.dk/plugins/tutor-lms-advanced-tracking" target="_blank">' . 
+										esc_html__( 'Renew your license here', 'tutor-lms-advanced-tracking' ) . 
+										'</a>'
+									);
+									?>
+								</p>
 							</div>
 
 						<?php else : ?>

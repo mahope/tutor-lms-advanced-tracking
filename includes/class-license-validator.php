@@ -4,6 +4,7 @@
  *
  * Handles license activation, validation, and heartbeat via REST API.
  * Stores license key, token, and status in WordPress options.
+ * Includes 14-day grace period for expired/invalid licenses.
  *
  * @package TutorLMSAdvancedTracking
  * @since 1.1.0
@@ -12,10 +13,11 @@
 if ( ! class_exists( 'TLAT_License_Validator' ) ) {
 	class TLAT_License_Validator {
 		// Option keys
-		const OPTION_KEY        = 'tlat_license_key';
-		const OPTION_TOKEN      = 'tlat_license_token';
-		const OPTION_STATUS     = 'tlat_license_status';
-		const OPTION_SERVER_URL = 'tlat_license_server_url';
+		const OPTION_KEY           = 'tlat_license_key';
+		const OPTION_TOKEN         = 'tlat_license_token';
+		const OPTION_STATUS        = 'tlat_license_status';
+		const OPTION_SERVER_URL    = 'tlat_license_server_url';
+		const OPTION_GRACE_START   = 'tlat_license_grace_start';
 
 		// Default license server URL (can be overridden in settings)
 		const DEFAULT_SERVER_URL = 'https://license.mahope.dk';
@@ -25,6 +27,10 @@ if ( ! class_exists( 'TLAT_License_Validator' ) ) {
 
 		// Cache duration for validation (1 hour)
 		const VALIDATION_CACHE_DURATION = HOUR_IN_SECONDS;
+
+		// Grace period duration (14 days in seconds)
+		const GRACE_PERIOD_DAYS    = 14;
+		const GRACE_PERIOD_SECONDS = 14 * DAY_IN_SECONDS;
 
 		/**
 		 * Initialize hooks and cron
@@ -270,7 +276,7 @@ if ( ! class_exists( 'TLAT_License_Validator' ) ) {
 			$response = self::api_request( '/validate', $body );
 
 			if ( is_wp_error( $response ) ) {
-				// On network error, preserve previous valid status for grace period
+				// On network error, preserve previous valid status but start grace if needed
 				$current = get_option( self::OPTION_STATUS );
 				if ( is_array( $current ) && ( $current['valid'] ?? false ) ) {
 					$current['message'] = 'Offline validation (server unreachable)';
@@ -278,6 +284,9 @@ if ( ! class_exists( 'TLAT_License_Validator' ) ) {
 					update_option( self::OPTION_STATUS, $current );
 					return [ 'valid' => true, 'status' => 'offline_grace' ];
 				}
+
+				// Start grace period for connection issues
+				self::start_grace_period();
 
 				update_option( self::OPTION_STATUS, [
 					'status'  => 'error',
@@ -290,6 +299,14 @@ if ( ! class_exists( 'TLAT_License_Validator' ) ) {
 			}
 
 			$is_valid = ! empty( $response['valid'] );
+
+			if ( $is_valid ) {
+				// License is valid, end any grace period
+				self::end_grace_period();
+			} else {
+				// License became invalid, start grace period
+				self::start_grace_period();
+			}
 
 			update_option( self::OPTION_STATUS, [
 				'status'  => $is_valid ? 'valid' : ( $response['error'] ?? 'invalid' ),
@@ -322,25 +339,114 @@ if ( ! class_exists( 'TLAT_License_Validator' ) ) {
 				'plugin_version' => defined( 'TLAT_VERSION' ) ? TLAT_VERSION : '1.0.0',
 			] );
 
-			// If heartbeat indicates license is no longer valid, update status
-			if ( ! is_wp_error( $response ) && isset( $response['valid'] ) && ! $response['valid'] ) {
-				update_option( self::OPTION_STATUS, [
-					'status'  => 'expired',
-					'message' => 'License has expired',
-					'valid'   => false,
-					'checked' => time(),
-				] );
+			// If heartbeat indicates license is no longer valid, start grace period
+			if ( ! is_wp_error( $response ) && isset( $response['valid'] ) ) {
+				if ( $response['valid'] ) {
+					// License is valid, end grace period
+					self::end_grace_period();
+				} else {
+					// License invalid, start grace period
+					self::start_grace_period();
+					update_option( self::OPTION_STATUS, [
+						'status'  => 'expired',
+						'message' => 'License has expired',
+						'valid'   => false,
+						'checked' => time(),
+					] );
+				}
 			}
 		}
 
 		/**
-		 * Check if current license is valid
+		 * Check if current license is valid (including grace period)
 		 *
-		 * @return bool Whether license is valid
+		 * @return bool Whether license is valid or in grace period
 		 */
 		public static function is_valid(): bool {
 			$status = get_option( self::OPTION_STATUS );
+			
+			// Check if license is actually valid
+			if ( is_array( $status ) && ! empty( $status['valid'] ) ) {
+				// License is valid, clear any grace period
+				delete_option( self::OPTION_GRACE_START );
+				return true;
+			}
+			
+			// License is not valid, but check grace period
+			return self::is_in_grace_period();
+		}
+
+		/**
+		 * Check if license is strictly valid (not counting grace period)
+		 *
+		 * @return bool Whether license is actually valid
+		 */
+		public static function is_strictly_valid(): bool {
+			$status = get_option( self::OPTION_STATUS );
 			return is_array( $status ) && ! empty( $status['valid'] );
+		}
+
+		/**
+		 * Check if currently in grace period
+		 *
+		 * @return bool Whether in grace period
+		 */
+		public static function is_in_grace_period(): bool {
+			$grace_start = get_option( self::OPTION_GRACE_START, 0 );
+			
+			if ( empty( $grace_start ) ) {
+				return false;
+			}
+			
+			$grace_end = $grace_start + self::GRACE_PERIOD_SECONDS;
+			
+			return time() < $grace_end;
+		}
+
+		/**
+		 * Get grace period info
+		 *
+		 * @return array Grace period details or empty if not in grace
+		 */
+		public static function get_grace_period_info(): array {
+			$grace_start = get_option( self::OPTION_GRACE_START, 0 );
+			
+			if ( empty( $grace_start ) ) {
+				return [];
+			}
+			
+			$grace_end     = $grace_start + self::GRACE_PERIOD_SECONDS;
+			$now           = time();
+			$remaining     = max( 0, $grace_end - $now );
+			$days_left     = ceil( $remaining / DAY_IN_SECONDS );
+			$is_active     = $remaining > 0;
+			
+			return [
+				'active'       => $is_active,
+				'started'      => $grace_start,
+				'ends'         => $grace_end,
+				'remaining'    => $remaining,
+				'days_left'    => $days_left,
+				'total_days'   => self::GRACE_PERIOD_DAYS,
+				'days_elapsed' => self::GRACE_PERIOD_DAYS - $days_left,
+			];
+		}
+
+		/**
+		 * Start grace period (called when license becomes invalid)
+		 */
+		private static function start_grace_period(): void {
+			// Only start if not already in grace period
+			if ( ! get_option( self::OPTION_GRACE_START ) ) {
+				update_option( self::OPTION_GRACE_START, time() );
+			}
+		}
+
+		/**
+		 * End grace period (called when license becomes valid again)
+		 */
+		private static function end_grace_period(): void {
+			delete_option( self::OPTION_GRACE_START );
 		}
 
 		/**
@@ -371,9 +477,10 @@ if ( ! class_exists( 'TLAT_License_Validator' ) ) {
 				}
 			}
 
-			$status = self::get_status();
+			$status      = self::get_status();
+			$grace_info  = self::get_grace_period_info();
 
-			// Don't show notice if valid
+			// Don't show notice if license is strictly valid
 			if ( ! empty( $status['valid'] ) ) {
 				return;
 			}
@@ -381,9 +488,42 @@ if ( ! class_exists( 'TLAT_License_Validator' ) ) {
 			$status_text = $status['status'] ?? 'unknown';
 			$message     = $status['message'] ?? '';
 
-			// Determine notice class and icon
+			// Check if in grace period
+			if ( ! empty( $grace_info['active'] ) ) {
+				$days_left = $grace_info['days_left'];
+				$notice_class = $days_left <= 3 ? 'notice-error' : 'notice-warning';
+				?>
+				<div class="notice <?php echo esc_attr( $notice_class ); ?>">
+					<p>
+						<strong>⏳ Tutor LMS Advanced Tracking — Grace Period:</strong>
+						<?php
+						if ( $days_left <= 1 ) {
+							esc_html_e( 'Your license grace period expires TODAY! Please renew or reactivate your license to continue using the plugin.', 'tutor-lms-advanced-tracking' );
+						} else {
+							echo esc_html( sprintf(
+								/* translators: %d: number of days */
+								_n(
+									'Your license is invalid but the plugin will continue working for %d more day. Please renew or reactivate.',
+									'Your license is invalid but the plugin will continue working for %d more days. Please renew or reactivate.',
+									$days_left,
+									'tutor-lms-advanced-tracking'
+								),
+								$days_left
+							) );
+						}
+						?>
+						<a href="<?php echo esc_url( admin_url( 'options-general.php?page=tlat-license' ) ); ?>">
+							<?php esc_html_e( 'Manage License →', 'tutor-lms-advanced-tracking' ); ?>
+						</a>
+					</p>
+				</div>
+				<?php
+				return;
+			}
+
+			// Grace period expired or no grace period
 			$notice_class = 'notice-warning';
-			if ( in_array( $status_text, [ 'expired', 'invalid_key' ], true ) ) {
+			if ( in_array( $status_text, [ 'expired', 'invalid_key', 'grace_expired' ], true ) ) {
 				$notice_class = 'notice-error';
 			}
 
@@ -397,7 +537,8 @@ if ( ! class_exists( 'TLAT_License_Validator' ) ) {
 							esc_html_e( 'License key not entered. Please enter your license key in Settings → TLAT License.', 'tutor-lms-advanced-tracking' );
 							break;
 						case 'expired':
-							esc_html_e( 'Your license has expired. Please renew to continue receiving updates.', 'tutor-lms-advanced-tracking' );
+						case 'grace_expired':
+							esc_html_e( 'Your license has expired and the grace period has ended. Please renew to continue using all features.', 'tutor-lms-advanced-tracking' );
 							break;
 						case 'invalid_key':
 							esc_html_e( 'Invalid license key. Please check and re-enter your license.', 'tutor-lms-advanced-tracking' );
@@ -414,6 +555,9 @@ if ( ! class_exists( 'TLAT_License_Validator' ) ) {
 							) );
 					}
 					?>
+					<a href="<?php echo esc_url( admin_url( 'options-general.php?page=tlat-license' ) ); ?>">
+						<?php esc_html_e( 'Manage License →', 'tutor-lms-advanced-tracking' ); ?>
+					</a>
 				</p>
 			</div>
 			<?php

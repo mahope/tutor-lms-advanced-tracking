@@ -52,9 +52,9 @@
 - [ ] Backup cron for SQLite database
 
 ### Plugin Polish
-- [ ] Admin UI: Licensindstillinger side (Settings → TLAT License)
-- [ ] License aktiverings-flow i admin (enter key → validate → activate)
-- [ ] Graceful degradation når licens udløber (14-dages grace period)
+- [x] Admin UI: Licensindstillinger side (Settings → TLAT License)
+- [x] License aktiverings-flow i admin (enter key → validate → activate)
+- [x] Graceful degradation når licens udløber (14-dages grace period)
 - [ ] Loading states på alle dashboard charts
 - [ ] Responsive fixes til admin UI på tablet
 
