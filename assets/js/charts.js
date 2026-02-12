@@ -137,6 +137,17 @@ jQuery(document).ready(function($) {
      */
     function renderChart(ctx, canvasId, chartData) {
         try {
+            // Check if data is empty
+            const hasData = chartData.data && 
+                chartData.data.datasets && 
+                chartData.data.datasets.length > 0 &&
+                chartData.data.datasets.some(ds => ds.data && ds.data.length > 0 && ds.data.some(v => v > 0));
+            
+            if (!hasData) {
+                showChartNoData(canvasId);
+                return;
+            }
+            
             // Add default styling and configurations
             const config = {
                 type: chartData.type,
@@ -144,6 +155,10 @@ jQuery(document).ready(function($) {
                 options: {
                     responsive: true,
                     maintainAspectRatio: false,
+                    animation: {
+                        duration: 600,
+                        easing: 'easeOutQuart'
+                    },
                     plugins: {
                         legend: {
                             display: true,
@@ -175,13 +190,29 @@ jQuery(document).ready(function($) {
      */
     function showChartLoading(canvasId) {
         const container = $('#' + canvasId).closest('.chart-container');
+        const canvas = $('#' + canvasId);
+        
         container.addClass('loading');
+        canvas.addClass('chart-hidden');
         
         if (!container.find('.chart-loading').length) {
             container.append(
                 '<div class="chart-loading">' +
-                '<div class="loading-spinner"></div>' +
-                '<p>' + tutorAdvancedCharts.strings.loading + '</p>' +
+                    '<div class="chart-skeleton">' +
+                        '<div class="skeleton-header"></div>' +
+                        '<div class="skeleton-bars">' +
+                            '<div class="skeleton-bar" style="height: 60%"></div>' +
+                            '<div class="skeleton-bar" style="height: 80%"></div>' +
+                            '<div class="skeleton-bar" style="height: 45%"></div>' +
+                            '<div class="skeleton-bar" style="height: 90%"></div>' +
+                            '<div class="skeleton-bar" style="height: 55%"></div>' +
+                            '<div class="skeleton-bar" style="height: 70%"></div>' +
+                        '</div>' +
+                    '</div>' +
+                    '<div class="loading-overlay">' +
+                        '<div class="loading-spinner"></div>' +
+                        '<p>' + tutorAdvancedCharts.strings.loading + '</p>' +
+                    '</div>' +
                 '</div>'
             );
         }
@@ -192,8 +223,20 @@ jQuery(document).ready(function($) {
      */
     function hideChartLoading(canvasId) {
         const container = $('#' + canvasId).closest('.chart-container');
+        const canvas = $('#' + canvasId);
+        
         container.removeClass('loading');
-        container.find('.chart-loading').remove();
+        container.find('.chart-loading').fadeOut(200, function() {
+            $(this).remove();
+        });
+        
+        // Fade in the canvas with chart
+        canvas.removeClass('chart-hidden').addClass('chart-visible');
+        
+        // Remove animation class after it completes
+        setTimeout(function() {
+            canvas.removeClass('chart-visible');
+        }, 400);
     }
     
     /**
@@ -201,15 +244,42 @@ jQuery(document).ready(function($) {
      */
     function showChartError(canvasId, message) {
         const container = $('#' + canvasId).closest('.chart-container');
+        const canvas = $('#' + canvasId);
+        
         container.addClass('error');
+        canvas.addClass('chart-hidden');
         
         container.find('.chart-error').remove();
         container.append(
             '<div class="chart-error">' +
-            '<p>' + escapeHtml(message) + '</p>' +
-            '<button type="button" class="retry-chart" data-canvas="' + canvasId + '">' +
-            'Retry' +
-            '</button>' +
+                '<div class="error-icon">⚠️</div>' +
+                '<p class="error-message">' + escapeHtml(message) + '</p>' +
+                '<button type="button" class="retry-chart" data-canvas="' + canvasId + '">' +
+                    '<span class="retry-icon">↻</span> ' + 
+                    (tutorAdvancedCharts.strings.retry || 'Retry') +
+                '</button>' +
+            '</div>'
+        );
+    }
+    
+    /**
+     * Show no data state for chart
+     */
+    function showChartNoData(canvasId) {
+        const container = $('#' + canvasId).closest('.chart-container');
+        const canvas = $('#' + canvasId);
+        
+        container.addClass('no-data');
+        canvas.addClass('chart-hidden');
+        
+        container.find('.chart-no-data').remove();
+        container.append(
+            '<div class="chart-no-data">' +
+                '<div class="no-data-icon">📊</div>' +
+                '<p class="no-data-message">' + tutorAdvancedCharts.strings.noData + '</p>' +
+                '<p class="no-data-hint">' + 
+                    (tutorAdvancedCharts.strings.noDataHint || 'Data will appear once students start taking courses.') +
+                '</p>' +
             '</div>'
         );
     }

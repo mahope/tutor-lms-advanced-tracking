@@ -55,7 +55,7 @@
 - [x] Admin UI: Licensindstillinger side (Settings → TLAT License)
 - [x] License aktiverings-flow i admin (enter key → validate → activate)
 - [x] Graceful degradation når licens udløber (14-dages grace period)
-- [ ] Loading states på alle dashboard charts
+- [x] Loading states på alle dashboard charts
 - [ ] Responsive fixes til admin UI på tablet
 
 ### Auto-Update System

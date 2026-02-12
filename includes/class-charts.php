@@ -58,7 +58,9 @@ class TutorAdvancedTracking_Charts {
             'strings' => array(
                 'loading' => __('Loading chart data...', 'tutor-lms-advanced-tracking'),
                 'error' => __('Error loading chart data', 'tutor-lms-advanced-tracking'),
-                'noData' => __('No data available', 'tutor-lms-advanced-tracking')
+                'noData' => __('No data available', 'tutor-lms-advanced-tracking'),
+                'noDataHint' => __('Data will appear once students start taking courses.', 'tutor-lms-advanced-tracking'),
+                'retry' => __('Retry', 'tutor-lms-advanced-tracking')
             )
         ));
     }

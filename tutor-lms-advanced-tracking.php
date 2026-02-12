@@ -3,7 +3,7 @@
  * Plugin Name: Advanced Tutor LMS Stats Dashboard
  * Plugin URI: https://github.com/madsholst/tutor-lms-advanced-tracking
  * Description: Extends Tutor LMS with advanced statistics and detailed insights into course and user data. Requires Tutor LMS 2.0.0 or higher.
- * Version: 1.0.0
+ * Version: 1.0.1
  * Author: Mads Holst Jensen
  * License: GPL v2 or later
  * License URI: https://www.gnu.org/licenses/gpl-2.0.html
@@ -23,7 +23,7 @@ if (!defined('ABSPATH')) {
 }
 
 // Define plugin constants
-define('TUTOR_ADVANCED_TRACKING_VERSION', '1.0.0');
+define('TUTOR_ADVANCED_TRACKING_VERSION', '1.0.1');
 define('TUTOR_ADVANCED_TRACKING_PLUGIN_FILE', __FILE__);
 define('TUTOR_ADVANCED_TRACKING_PLUGIN_DIR', plugin_dir_path(__FILE__));
 define('TUTOR_ADVANCED_TRACKING_PLUGIN_URL', plugin_dir_url(__FILE__));
