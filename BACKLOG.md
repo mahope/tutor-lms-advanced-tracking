@@ -48,8 +48,8 @@
 - [ ] Deploy tlat-license-server til Dokploy (license.tutor-tracking.com) — **READY**: Dockerfile + docker-compose + deployment guide klar i repo. Kræver Dokploy UI login for at fuldføre.
 - [ ] Sæt op HTTPS med Let's Encrypt
 - [x] Tilføj rate limiting (express-rate-limit)
-- [ ] Monitoring: uptime check + error alerts
-- [ ] Backup cron for SQLite database
+- [x] Monitoring: uptime check + error alerts (healthcheck.sh + docs/monitoring.md)
+- [x] Backup cron for SQLite database (backup-db.sh + retention + offsite docs)
 
 ### Plugin Polish
 - [x] Admin UI: Licensindstillinger side (Settings → TLAT License)
