@@ -7,6 +7,6 @@
 - [x] 2026-02-12T15:19:04Z Performance: WP_Query optimering, indexer, async cron for aggregation
 - [x] Compatibility: Tutor LMS v aktuelt + WP 6.x + PHP 8.2+, WP-CLI kommandoer — completed 2026-02-12 16:37 CET
 - [x] Telemetry (opt-in): anonym brugstælling, crash logs (WP options + remote endpoint) — completed 2026-02-12 16:46
-- [ ] Docs/README: install, setup, screenshots, hooks/filters reference
+- [x] Docs/README: install, setup, screenshots, hooks/filters reference — completed 2026-02-12 17:07 CET
 - [ ] Demo-video (2 min): key value prop + UI-walkthrough (script outline)
 - [ ] Launch-plan: versioning, changelog, release checklist, support-templates
