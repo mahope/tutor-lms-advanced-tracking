@@ -1,35 +1,44 @@
-# Tutor LMS Advanced Tracking — Backlog (v1)
+# Tutor LMS Advanced Tracking — Backlog
 
-- [x] - [ ] Produktdefinition: afgræns MVP-metrics (lesson views, completion, time-on-lesson, quiz detail) og datakilder (Tutor LMS hooks) — completed 2026-02-12 14:15
-- [x] Licensmodel — completed 2026-02-12 14:45: årlig licens + domain checks (LemonSqueezy/WOOREST), simple license validator
-- [x] (2026-02-12 15:22 CET) Admin-UI: oversigtsside med grafer (Chart.js) + eksport (CSV)
-- [x] Data-layer: events/DB-schema (custom tables vs postmeta), migrator, uninstaller — completed 2026-02-12 15:40 CET: scaffolds added (tables: tlat_events, tlat_agg_daily), dbDelta migrator, uninstall + WP-CLI stub
-- [x] 2026-02-12T15:19:04Z Performance: WP_Query optimering, indexer, async cron for aggregation
-- [x] Compatibility: Tutor LMS v aktuelt + WP 6.x + PHP 8.2+, WP-CLI kommandoer — completed 2026-02-12 16:37 CET
-- [x] Telemetry (opt-in): anonym brugstælling, crash logs (WP options + remote endpoint) — completed 2026-02-12 16:46
-- [x] Docs/README: install, setup, screenshots, hooks/filters reference — completed 2026-02-12 17:07 CET
-- [x] Demo-video (2 min): key value prop + UI-walkthrough (script outline) — done: 2026-02-12 17:30
-- [x] Launch-plan: versioning, changelog, release checklist, support-templates (done: 2026-02-12 17:50)
+## Completed
+- [x] MVP metrics definition (docs/MVP-metrics.md)
+- [x] License validator scaffold (includes/class-license-validator.php)
+- [x] Admin UI with Chart.js (includes/class-charts.php, class-dashboard.php)
+- [x] CSV/JSON export (includes/class-export.php)
+- [x] WP-CLI commands (includes/cli.php)
+- [x] Funnel dashboard (includes/class-funnel-dashboard.php)
+- [x] Cohort analytics (includes/class-cohort-analytics.php)
+- [x] REST API endpoints (includes/class-api.php)
+- [x] Compatibility docs (docs/COMPATIBILITY.md)
 
-## New Features (2026-02-12)
-- [x] Kursus-funnel dashboard (enroll → start → complete) med drop-off analyse — completed 2026-02-12 19:30 CET
-- [x] Segmenter pr. brugergruppe (role, kursus, aktivitet) + filtrerbare grafer — completed 2026-02-12 19:45 CET
-- [ ] Real-time session-tracking (heartbeat) med "aktive elever nu"
-- [ ] Alerting: e-mail/Slack ved fald i completion >X% uge/uge
-- [ ] Eksport til CSV/JSON pr. kursus/lektioneniveau (inkl. quiz metrics)
-- [ ] "Learner journey" visning (timeline for elevens haendelser)
-- [ ] Multisite support + netvaerksoversigter
-- [ ] REST API endpoints til dataudtraek (JWT beskyttet)
-- [ ] Dataintegritet: reprocesserings-queue og "rebuild aggregates"
-- [ ] Indbygget datamaskering/GDPR (hash af PII, opt-in/-out UI)
-- [ ] Cohort-analyse (uge/maaned) med retention-kurver
-- [ ] Instruktor-dashboard (kursusperformance pr. underviser)
-- [ ] Egen KPI-builder (vaelg metrics + filtre → gemt rapport)
-- [ ] Webhooks (event-stream til eksterne systemer)
-- [ ] Ugentlig e-mailrapport (PDF/CSV bilag) pr. kursus
-- [ ] BigQuery/CSV bulk-eksport (schedule + on-demand)
-- [ ] Rollebaserede rettigheder (admin/instructor/viewer)
-- [ ] Rapport-planlaegning (send til mail/Slack paa tid)
-- [ ] Kursus-sammenligning (A/B af curriculums)
-- [ ] Data quality monitor (manglende events, clock drift)
-- [ ] Implementer Plausible analytics (self-hosted: analytics.holstjensen.eu)
+## In Progress / To Do
+
+### Licensserver (Prioritet 1)
+- [ ] Opret separat licensserver repo (Node.js/Express + SQLite)
+- [ ] Implementer endpoints: /activate, /deactivate, /validate, /heartbeat
+- [ ] JWT-baserede licensnøgler med claims (plan, domain, expiry)
+- [ ] Integrer med class-license-validator.php (API kald til licensserver)
+- [ ] Admin UI: Licensindstillinger side i WP
+
+### Auto-Update (Prioritet 2)
+- [ ] Opret update-server endpoint (JSON manifest + zip URL)
+- [ ] Implementer update checker i plugin (hook til wp_update_plugins)
+- [ ] Version bump og changelog workflow
+
+### UI/UX Polish (Prioritet 3)
+- [ ] Tilføj loading states til dashboard charts
+- [ ] Responsive design fixes til admin UI
+- [ ] Export modal med format-valg (CSV/JSON/PDF)
+- [ ] Inline help tooltips på dashboard
+
+### Dokumentation & Marketing
+- [ ] Screenshots til docs/screenshots/ (admin UI, charts, export)
+- [ ] Video script til 2-min demo (docs/demo-script.md exists)
+- [ ] Landing page tekst + feature list
+- [ ] Pricing page (LTD $99, Årlig $15)
+
+### Avancerede Features (Later)
+- [ ] Webhooks til eksterne systemer (Zapier/Make)
+- [ ] Multisite network dashboard
+- [ ] Scheduled email reports (ugentlig PDF)
+- [ ] BigQuery export integration
