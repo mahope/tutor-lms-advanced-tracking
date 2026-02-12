@@ -2,7 +2,7 @@
 
 - [x] - [ ] Produktdefinition: afgræns MVP-metrics (lesson views, completion, time-on-lesson, quiz detail) og datakilder (Tutor LMS hooks) — completed 2026-02-12 14:15
 - [x] Licensmodel — completed 2026-02-12 14:45: årlig licens + domain checks (LemonSqueezy/WOOREST), simple license validator
-- [ ] Admin-UI: oversigtsside med grafer (Chart.js) + eksport (CSV)
+- [x] (2026-02-12 15:22 CET) Admin-UI: oversigtsside med grafer (Chart.js) + eksport (CSV)
 - [ ] Data-layer: events/DB-schema (custom tables vs postmeta), migrator, uninstaller
 - [ ] Performance: WP_Query optimering, indexer, async cron for aggregation
 - [ ] Compatibility: Tutor LMS v aktuelt + WP 6.x + PHP 8.2+, WP-CLI kommandoer
