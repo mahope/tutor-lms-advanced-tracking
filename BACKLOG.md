@@ -33,7 +33,7 @@
 ### Licensserver Deployment
 - [ ] Deploy tlat-license-server til Dokploy (license.tutor-tracking.com)
 - [ ] Sæt op HTTPS med Let's Encrypt
-- [ ] Tilføj rate limiting (express-rate-limit)
+- [x] Tilføj rate limiting (express-rate-limit)
 - [ ] Monitoring: uptime check + error alerts
 - [ ] Backup cron for SQLite database
 
