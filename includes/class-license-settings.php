@@ -226,6 +226,31 @@ if ( ! class_exists( 'TLAT_License_Settings' ) ) {
 						);
 					}
 					break;
+
+				case 'check_updates':
+					if ( class_exists( 'TLAT_Update_Checker' ) ) {
+						$result = TLAT_Update_Checker::force_check();
+						if ( ! empty( $result['hasUpdate'] ) ) {
+							add_settings_error(
+								'tlat_license',
+								'update_available',
+								sprintf(
+									/* translators: %s: new version number */
+									__( 'Update available! Version %s is ready to install.', 'tutor-lms-advanced-tracking' ),
+									$result['latestVersion']
+								),
+								'info'
+							);
+						} else {
+							add_settings_error(
+								'tlat_license',
+								'no_update',
+								__( 'You are running the latest version.', 'tutor-lms-advanced-tracking' ),
+								'success'
+							);
+						}
+					}
+					break;
 			}
 		}
 
@@ -469,6 +494,27 @@ if ( ! class_exists( 'TLAT_License_Settings' ) ) {
 								);
 								?>
 							</p>
+						<?php endif; ?>
+					</div>
+
+					<!-- Plugin Updates -->
+					<div class="tlat-license-box">
+						<h3 style="margin-top:0;"><?php esc_html_e( 'Plugin Updates', 'tutor-lms-advanced-tracking' ); ?></h3>
+						<p>
+							<strong><?php esc_html_e( 'Current Version:', 'tutor-lms-advanced-tracking' ); ?></strong>
+							<?php echo esc_html( TLAT_VERSION ); ?>
+						</p>
+						<form method="post" class="tlat-license-form">
+							<?php wp_nonce_field( self::NONCE_ACTION, 'tlat_license_nonce' ); ?>
+							<input type="hidden" name="tlat_action" value="check_updates">
+							<button type="submit" class="button">
+								🔄 <?php esc_html_e( 'Check for Updates', 'tutor-lms-advanced-tracking' ); ?>
+							</button>
+						</form>
+						<?php if ( ! $is_valid ) : ?>
+						<p style="margin-top:10px;color:#d63638;font-size:13px;">
+							<?php esc_html_e( 'Note: A valid license is required to download updates.', 'tutor-lms-advanced-tracking' ); ?>
+						</p>
 						<?php endif; ?>
 					</div>
 

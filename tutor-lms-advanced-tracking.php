@@ -101,6 +101,7 @@ class TutorAdvancedTracking {
             'includes/class-funnel-dashboard.php',
             'includes/class-license-validator.php',
             'includes/class-license-settings.php',
+            'includes/class-update-checker.php',
         );
         
         foreach ($required_files as $file) {
