@@ -37,6 +37,8 @@ class TutorAdvancedTracking_StudentAnalytics {
         add_action('wp_ajax_tlat_get_student_details', array($this, 'ajax_get_student_details'));
         add_action('wp_ajax_tlat_get_at_risk_students', array($this, 'ajax_get_at_risk_students'));
         add_action('wp_ajax_tlat_get_student_timeline', array($this, 'ajax_get_student_timeline'));
+        add_action('wp_ajax_tlat_compare_students', array($this, 'ajax_compare_students'));
+        add_action('wp_ajax_tlat_search_students', array($this, 'ajax_search_students'));
         
         // Enqueue scripts
         add_action('admin_enqueue_scripts', array($this, 'enqueue_scripts'));
@@ -54,13 +56,22 @@ class TutorAdvancedTracking_StudentAnalytics {
             'tlat-students',
             array($this, 'render_students_page')
         );
+        
+        add_submenu_page(
+            'tutor-stats',
+            __('Compare Students', 'tutor-lms-advanced-tracking'),
+            __('⚖️ Compare Students', 'tutor-lms-advanced-tracking'),
+            'manage_tutor',
+            'tlat-student-comparison',
+            array($this, 'render_comparison_page')
+        );
     }
     
     /**
      * Enqueue scripts and styles
      */
     public function enqueue_scripts($hook) {
-        if (strpos($hook, 'tlat-students') === false) {
+        if (strpos($hook, 'tlat-students') === false && strpos($hook, 'tlat-student-comparison') === false) {
             return;
         }
         
@@ -939,6 +950,603 @@ class TutorAdvancedTracking_StudentAnalytics {
         $at_risk = $this->get_at_risk_students($threshold_days, $min_engagement);
         
         return rest_ensure_response($at_risk);
+    }
+    
+    /**
+     * Render student comparison page
+     */
+    public function render_comparison_page() {
+        global $wpdb;
+        
+        // Get all enrolled students for the selector
+        $students = $wpdb->get_results(
+            "SELECT DISTINCT e.user_id, u.display_name, u.user_email
+             FROM {$wpdb->prefix}tutor_enrollments e
+             JOIN {$wpdb->users} u ON e.user_id = u.ID
+             ORDER BY u.display_name ASC
+             LIMIT 500"
+        );
+        
+        // Get courses for filtering
+        $courses = get_posts(array('post_type' => 'courses', 'posts_per_page' => -1, 'orderby' => 'title', 'order' => 'ASC'));
+        
+        ?>
+        <div class="wrap tlat-comparison-page">
+            <h1><?php _e('Compare Students', 'tutor-lms-advanced-tracking'); ?></h1>
+            <p style="color: #6b7280; margin-bottom: 20px;">
+                <?php _e('Select 2-5 students to compare their progression, engagement, and performance side-by-side.', 'tutor-lms-advanced-tracking'); ?>
+            </p>
+            
+            <!-- Student Selection -->
+            <div style="background: white; padding: 20px; border-radius: 8px; box-shadow: 0 1px 3px rgba(0,0,0,0.1); margin-bottom: 20px;">
+                <h3 style="margin-top: 0;"><?php _e('Select Students to Compare', 'tutor-lms-advanced-tracking'); ?></h3>
+                
+                <div style="display: flex; gap: 15px; flex-wrap: wrap; align-items: flex-end;">
+                    <div style="flex: 1; min-width: 300px;">
+                        <label style="display: block; margin-bottom: 5px; font-weight: 500;">
+                            <?php _e('Search & Select Students', 'tutor-lms-advanced-tracking'); ?>
+                        </label>
+                        <input type="text" id="tlat-student-search-input" placeholder="<?php _e('Type to search students...', 'tutor-lms-advanced-tracking'); ?>" style="width: 100%; padding: 10px;">
+                        <div id="tlat-search-results" style="display: none; position: absolute; background: white; border: 1px solid #ddd; border-radius: 4px; max-height: 200px; overflow-y: auto; z-index: 1000; width: 300px; box-shadow: 0 4px 6px rgba(0,0,0,0.1);"></div>
+                    </div>
+                    
+                    <div>
+                        <label style="display: block; margin-bottom: 5px; font-weight: 500;">
+                            <?php _e('Filter by Course', 'tutor-lms-advanced-tracking'); ?>
+                        </label>
+                        <select id="tlat-course-filter-comparison">
+                            <option value=""><?php _e('All Courses', 'tutor-lms-advanced-tracking'); ?></option>
+                            <?php foreach ($courses as $course): ?>
+                                <option value="<?php echo esc_attr($course->ID); ?>"><?php echo esc_html($course->post_title); ?></option>
+                            <?php endforeach; ?>
+                        </select>
+                    </div>
+                    
+                    <button id="tlat-compare-btn" class="button button-primary" disabled>
+                        <?php _e('Compare Selected', 'tutor-lms-advanced-tracking'); ?>
+                    </button>
+                </div>
+                
+                <!-- Selected Students Tags -->
+                <div id="tlat-selected-students" style="display: flex; flex-wrap: wrap; gap: 10px; margin-top: 15px; min-height: 40px; padding: 10px; background: #f8fafc; border-radius: 4px;">
+                    <span style="color: #9ca3af; font-style: italic;"><?php _e('No students selected yet. Search and click to add.', 'tutor-lms-advanced-tracking'); ?></span>
+                </div>
+            </div>
+            
+            <!-- Comparison Results -->
+            <div id="tlat-comparison-results" style="display: none;">
+                <!-- Overview Cards -->
+                <div id="tlat-comparison-cards" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px; margin-bottom: 20px;"></div>
+                
+                <!-- Charts Section -->
+                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(400px, 1fr)); gap: 20px;">
+                    <!-- Radar Chart: Engagement Breakdown -->
+                    <div style="background: white; padding: 20px; border-radius: 8px; box-shadow: 0 1px 3px rgba(0,0,0,0.1);">
+                        <h3 style="margin-top: 0;"><?php _e('Engagement Comparison', 'tutor-lms-advanced-tracking'); ?></h3>
+                        <canvas id="tlat-radar-chart" height="300"></canvas>
+                    </div>
+                    
+                    <!-- Bar Chart: Quiz Performance -->
+                    <div style="background: white; padding: 20px; border-radius: 8px; box-shadow: 0 1px 3px rgba(0,0,0,0.1);">
+                        <h3 style="margin-top: 0;"><?php _e('Quiz Performance', 'tutor-lms-advanced-tracking'); ?></h3>
+                        <canvas id="tlat-bar-chart" height="300"></canvas>
+                    </div>
+                </div>
+                
+                <!-- Progress Over Time -->
+                <div style="background: white; padding: 20px; border-radius: 8px; box-shadow: 0 1px 3px rgba(0,0,0,0.1); margin-top: 20px;">
+                    <h3 style="margin-top: 0;"><?php _e('Activity Over Time (Last 30 Days)', 'tutor-lms-advanced-tracking'); ?></h3>
+                    <canvas id="tlat-line-chart" height="200"></canvas>
+                </div>
+                
+                <!-- Detailed Comparison Table -->
+                <div style="background: white; padding: 20px; border-radius: 8px; box-shadow: 0 1px 3px rgba(0,0,0,0.1); margin-top: 20px;">
+                    <h3 style="margin-top: 0;"><?php _e('Detailed Metrics', 'tutor-lms-advanced-tracking'); ?></h3>
+                    <div id="tlat-comparison-table"></div>
+                </div>
+            </div>
+            
+            <!-- Loading State -->
+            <div id="tlat-comparison-loading" style="display: none; text-align: center; padding: 40px;">
+                <span class="spinner is-active" style="float: none;"></span>
+                <p><?php _e('Loading comparison data...', 'tutor-lms-advanced-tracking'); ?></p>
+            </div>
+        </div>
+        
+        <style>
+            .tlat-comparison-page .tlat-student-tag {
+                display: inline-flex;
+                align-items: center;
+                gap: 8px;
+                padding: 6px 12px;
+                background: #3b82f6;
+                color: white;
+                border-radius: 20px;
+                font-size: 13px;
+            }
+            .tlat-comparison-page .tlat-student-tag .remove {
+                cursor: pointer;
+                font-weight: bold;
+                opacity: 0.8;
+            }
+            .tlat-comparison-page .tlat-student-tag .remove:hover {
+                opacity: 1;
+            }
+            .tlat-comparison-page .tlat-search-item {
+                padding: 10px 15px;
+                cursor: pointer;
+                border-bottom: 1px solid #eee;
+            }
+            .tlat-comparison-page .tlat-search-item:hover {
+                background: #f3f4f6;
+            }
+            .tlat-comparison-page .tlat-search-item:last-child {
+                border-bottom: none;
+            }
+            .tlat-comparison-page .tlat-search-item.disabled {
+                opacity: 0.5;
+                cursor: not-allowed;
+                background: #f9fafb;
+            }
+        </style>
+        
+        <script>
+        jQuery(document).ready(function($) {
+            var selectedStudents = [];
+            var radarChart = null;
+            var barChart = null;
+            var lineChart = null;
+            var searchTimeout = null;
+            
+            // Student colors for charts
+            var studentColors = [
+                { bg: 'rgba(59, 130, 246, 0.2)', border: 'rgb(59, 130, 246)' },
+                { bg: 'rgba(16, 185, 129, 0.2)', border: 'rgb(16, 185, 129)' },
+                { bg: 'rgba(245, 158, 11, 0.2)', border: 'rgb(245, 158, 11)' },
+                { bg: 'rgba(139, 92, 246, 0.2)', border: 'rgb(139, 92, 246)' },
+                { bg: 'rgba(239, 68, 68, 0.2)', border: 'rgb(239, 68, 68)' }
+            ];
+            
+            // Search students
+            $('#tlat-student-search-input').on('input', function() {
+                var query = $(this).val();
+                clearTimeout(searchTimeout);
+                
+                if (query.length < 2) {
+                    $('#tlat-search-results').hide();
+                    return;
+                }
+                
+                searchTimeout = setTimeout(function() {
+                    $.post(ajaxurl, {
+                        action: 'tlat_search_students',
+                        nonce: '<?php echo wp_create_nonce('tlat_student_analytics'); ?>',
+                        query: query,
+                        course_id: $('#tlat-course-filter-comparison').val()
+                    }, function(response) {
+                        if (response.success && response.data.length > 0) {
+                            var html = '';
+                            response.data.forEach(function(student) {
+                                var isSelected = selectedStudents.some(s => s.id == student.id);
+                                html += '<div class="tlat-search-item' + (isSelected ? ' disabled' : '') + '" data-id="' + student.id + '" data-name="' + student.name + '">';
+                                html += '<strong>' + student.name + '</strong><br>';
+                                html += '<small style="color: #6b7280;">' + student.email + '</small>';
+                                if (isSelected) html += ' <span style="color: #10b981;">✓ Selected</span>';
+                                html += '</div>';
+                            });
+                            $('#tlat-search-results').html(html).show();
+                        } else {
+                            $('#tlat-search-results').html('<div style="padding: 15px; color: #6b7280;"><?php _e('No students found', 'tutor-lms-advanced-tracking'); ?></div>').show();
+                        }
+                    });
+                }, 300);
+            });
+            
+            // Click outside to close search results
+            $(document).on('click', function(e) {
+                if (!$(e.target).closest('#tlat-student-search-input, #tlat-search-results').length) {
+                    $('#tlat-search-results').hide();
+                }
+            });
+            
+            // Select student from search
+            $(document).on('click', '.tlat-search-item:not(.disabled)', function() {
+                if (selectedStudents.length >= 5) {
+                    alert('<?php _e('You can compare up to 5 students at a time.', 'tutor-lms-advanced-tracking'); ?>');
+                    return;
+                }
+                
+                var id = $(this).data('id');
+                var name = $(this).data('name');
+                
+                selectedStudents.push({ id: id, name: name });
+                updateSelectedStudentsUI();
+                $('#tlat-search-results').hide();
+                $('#tlat-student-search-input').val('');
+            });
+            
+            // Remove selected student
+            $(document).on('click', '.tlat-student-tag .remove', function() {
+                var id = $(this).closest('.tlat-student-tag').data('id');
+                selectedStudents = selectedStudents.filter(s => s.id != id);
+                updateSelectedStudentsUI();
+            });
+            
+            // Update UI for selected students
+            function updateSelectedStudentsUI() {
+                var container = $('#tlat-selected-students');
+                
+                if (selectedStudents.length === 0) {
+                    container.html('<span style="color: #9ca3af; font-style: italic;"><?php _e('No students selected yet. Search and click to add.', 'tutor-lms-advanced-tracking'); ?></span>');
+                    $('#tlat-compare-btn').prop('disabled', true);
+                } else {
+                    var html = '';
+                    selectedStudents.forEach(function(student, index) {
+                        html += '<span class="tlat-student-tag" data-id="' + student.id + '" style="background: ' + studentColors[index].border + ';">';
+                        html += student.name;
+                        html += '<span class="remove">×</span>';
+                        html += '</span>';
+                    });
+                    container.html(html);
+                    $('#tlat-compare-btn').prop('disabled', selectedStudents.length < 2);
+                }
+            }
+            
+            // Compare students
+            $('#tlat-compare-btn').on('click', function() {
+                if (selectedStudents.length < 2) return;
+                
+                $('#tlat-comparison-results').hide();
+                $('#tlat-comparison-loading').show();
+                
+                var userIds = selectedStudents.map(s => s.id);
+                
+                $.post(ajaxurl, {
+                    action: 'tlat_compare_students',
+                    nonce: '<?php echo wp_create_nonce('tlat_student_analytics'); ?>',
+                    user_ids: userIds,
+                    course_id: $('#tlat-course-filter-comparison').val()
+                }, function(response) {
+                    $('#tlat-comparison-loading').hide();
+                    
+                    if (response.success) {
+                        renderComparison(response.data);
+                        $('#tlat-comparison-results').show();
+                    } else {
+                        alert(response.data.message || '<?php _e('Error loading comparison data', 'tutor-lms-advanced-tracking'); ?>');
+                    }
+                });
+            });
+            
+            // Render comparison data
+            function renderComparison(data) {
+                // Overview cards
+                var cardsHtml = '';
+                data.students.forEach(function(student, index) {
+                    var scoreColor = student.engagement.total < 30 ? '#ef4444' : (student.engagement.total < 60 ? '#f59e0b' : '#10b981');
+                    cardsHtml += '<div style="background: white; padding: 20px; border-radius: 8px; box-shadow: 0 1px 3px rgba(0,0,0,0.1); border-top: 4px solid ' + studentColors[index].border + ';">';
+                    cardsHtml += '<h4 style="margin: 0 0 15px 0;">' + student.name + '</h4>';
+                    cardsHtml += '<div style="font-size: 32px; font-weight: bold; color: ' + scoreColor + ';">' + student.engagement.total + '%</div>';
+                    cardsHtml += '<div style="color: #6b7280; font-size: 13px;"><?php _e('Engagement Score', 'tutor-lms-advanced-tracking'); ?></div>';
+                    cardsHtml += '<div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 15px; font-size: 13px;">';
+                    cardsHtml += '<div><span style="color: #6b7280;"><?php _e('Courses', 'tutor-lms-advanced-tracking'); ?>:</span> ' + student.enrolled_courses + '</div>';
+                    cardsHtml += '<div><span style="color: #6b7280;"><?php _e('Completed', 'tutor-lms-advanced-tracking'); ?>:</span> ' + student.completed_courses + '</div>';
+                    cardsHtml += '<div><span style="color: #6b7280;"><?php _e('Quizzes', 'tutor-lms-advanced-tracking'); ?>:</span> ' + student.quiz_count + '</div>';
+                    cardsHtml += '<div><span style="color: #6b7280;"><?php _e('Avg Score', 'tutor-lms-advanced-tracking'); ?>:</span> ' + student.avg_quiz_score + '%</div>';
+                    cardsHtml += '</div>';
+                    cardsHtml += '</div>';
+                });
+                $('#tlat-comparison-cards').html(cardsHtml);
+                
+                // Radar chart - engagement breakdown
+                var radarCtx = document.getElementById('tlat-radar-chart').getContext('2d');
+                if (radarChart) radarChart.destroy();
+                
+                var radarDatasets = data.students.map(function(student, index) {
+                    return {
+                        label: student.name,
+                        data: [
+                            Math.round(student.engagement.completion / 0.3 * 100),
+                            Math.round(student.engagement.quiz / 0.25 * 100),
+                            Math.round(student.engagement.activity / 0.25 * 100),
+                            Math.round(student.engagement.time / 0.20 * 100)
+                        ],
+                        backgroundColor: studentColors[index].bg,
+                        borderColor: studentColors[index].border,
+                        borderWidth: 2
+                    };
+                });
+                
+                radarChart = new Chart(radarCtx, {
+                    type: 'radar',
+                    data: {
+                        labels: ['<?php _e('Completion', 'tutor-lms-advanced-tracking'); ?>', '<?php _e('Quiz Score', 'tutor-lms-advanced-tracking'); ?>', '<?php _e('Activity', 'tutor-lms-advanced-tracking'); ?>', '<?php _e('Time Spent', 'tutor-lms-advanced-tracking'); ?>'],
+                        datasets: radarDatasets
+                    },
+                    options: {
+                        scales: {
+                            r: {
+                                beginAtZero: true,
+                                max: 100
+                            }
+                        }
+                    }
+                });
+                
+                // Bar chart - quiz performance
+                var barCtx = document.getElementById('tlat-bar-chart').getContext('2d');
+                if (barChart) barChart.destroy();
+                
+                var barDatasets = data.students.map(function(student, index) {
+                    return {
+                        label: student.name,
+                        data: [student.avg_quiz_score, student.best_quiz_score, student.quiz_count * 10],
+                        backgroundColor: studentColors[index].border
+                    };
+                });
+                
+                barChart = new Chart(barCtx, {
+                    type: 'bar',
+                    data: {
+                        labels: ['<?php _e('Avg Score', 'tutor-lms-advanced-tracking'); ?>', '<?php _e('Best Score', 'tutor-lms-advanced-tracking'); ?>', '<?php _e('Attempts (×10)', 'tutor-lms-advanced-tracking'); ?>'],
+                        datasets: barDatasets
+                    },
+                    options: {
+                        scales: {
+                            y: {
+                                beginAtZero: true,
+                                max: 100
+                            }
+                        }
+                    }
+                });
+                
+                // Line chart - activity over time
+                var lineCtx = document.getElementById('tlat-line-chart').getContext('2d');
+                if (lineChart) lineChart.destroy();
+                
+                var lineDatasets = data.students.map(function(student, index) {
+                    return {
+                        label: student.name,
+                        data: student.activity_timeline,
+                        borderColor: studentColors[index].border,
+                        backgroundColor: studentColors[index].bg,
+                        fill: false,
+                        tension: 0.3
+                    };
+                });
+                
+                lineChart = new Chart(lineCtx, {
+                    type: 'line',
+                    data: {
+                        labels: data.timeline_labels,
+                        datasets: lineDatasets
+                    },
+                    options: {
+                        scales: {
+                            y: {
+                                beginAtZero: true,
+                                title: {
+                                    display: true,
+                                    text: '<?php _e('Activities', 'tutor-lms-advanced-tracking'); ?>'
+                                }
+                            }
+                        }
+                    }
+                });
+                
+                // Detailed table
+                var tableHtml = '<table class="wp-list-table widefat fixed striped">';
+                tableHtml += '<thead><tr><th><?php _e('Metric', 'tutor-lms-advanced-tracking'); ?></th>';
+                data.students.forEach(function(student, index) {
+                    tableHtml += '<th style="border-top: 3px solid ' + studentColors[index].border + ';">' + student.name + '</th>';
+                });
+                tableHtml += '</tr></thead><tbody>';
+                
+                var metrics = [
+                    { key: 'engagement.total', label: '<?php _e('Overall Engagement', 'tutor-lms-advanced-tracking'); ?>', suffix: '%' },
+                    { key: 'enrolled_courses', label: '<?php _e('Enrolled Courses', 'tutor-lms-advanced-tracking'); ?>', suffix: '' },
+                    { key: 'completed_courses', label: '<?php _e('Completed Courses', 'tutor-lms-advanced-tracking'); ?>', suffix: '' },
+                    { key: 'lesson_completions', label: '<?php _e('Lessons Completed', 'tutor-lms-advanced-tracking'); ?>', suffix: '' },
+                    { key: 'quiz_count', label: '<?php _e('Quiz Attempts', 'tutor-lms-advanced-tracking'); ?>', suffix: '' },
+                    { key: 'avg_quiz_score', label: '<?php _e('Average Quiz Score', 'tutor-lms-advanced-tracking'); ?>', suffix: '%' },
+                    { key: 'best_quiz_score', label: '<?php _e('Best Quiz Score', 'tutor-lms-advanced-tracking'); ?>', suffix: '%' },
+                    { key: 'days_since_activity', label: '<?php _e('Days Since Last Activity', 'tutor-lms-advanced-tracking'); ?>', suffix: '' },
+                    { key: 'total_time_spent', label: '<?php _e('Total Time Spent', 'tutor-lms-advanced-tracking'); ?>', suffix: '' }
+                ];
+                
+                metrics.forEach(function(metric) {
+                    tableHtml += '<tr><td><strong>' + metric.label + '</strong></td>';
+                    data.students.forEach(function(student) {
+                        var value = metric.key.includes('.') ? 
+                            metric.key.split('.').reduce((o, k) => o[k], student) : 
+                            student[metric.key];
+                        tableHtml += '<td>' + value + metric.suffix + '</td>';
+                    });
+                    tableHtml += '</tr>';
+                });
+                
+                tableHtml += '</tbody></table>';
+                $('#tlat-comparison-table').html(tableHtml);
+            }
+        });
+        </script>
+        <?php
+    }
+    
+    /**
+     * AJAX: Search students
+     */
+    public function ajax_search_students() {
+        check_ajax_referer('tlat_student_analytics', 'nonce');
+        
+        if (!current_user_can('manage_tutor')) {
+            wp_send_json_error(array('message' => 'Permission denied'));
+        }
+        
+        global $wpdb;
+        
+        $query = sanitize_text_field($_POST['query']);
+        $course_id = isset($_POST['course_id']) ? intval($_POST['course_id']) : 0;
+        
+        $search = '%' . $wpdb->esc_like($query) . '%';
+        
+        if ($course_id > 0) {
+            $students = $wpdb->get_results($wpdb->prepare(
+                "SELECT DISTINCT e.user_id as id, u.display_name as name, u.user_email as email
+                 FROM {$wpdb->prefix}tutor_enrollments e
+                 JOIN {$wpdb->users} u ON e.user_id = u.ID
+                 WHERE e.course_id = %d
+                 AND (u.display_name LIKE %s OR u.user_email LIKE %s)
+                 ORDER BY u.display_name ASC
+                 LIMIT 20",
+                $course_id, $search, $search
+            ));
+        } else {
+            $students = $wpdb->get_results($wpdb->prepare(
+                "SELECT DISTINCT e.user_id as id, u.display_name as name, u.user_email as email
+                 FROM {$wpdb->prefix}tutor_enrollments e
+                 JOIN {$wpdb->users} u ON e.user_id = u.ID
+                 WHERE u.display_name LIKE %s OR u.user_email LIKE %s
+                 ORDER BY u.display_name ASC
+                 LIMIT 20",
+                $search, $search
+            ));
+        }
+        
+        wp_send_json_success($students);
+    }
+    
+    /**
+     * AJAX: Compare students
+     */
+    public function ajax_compare_students() {
+        check_ajax_referer('tlat_student_analytics', 'nonce');
+        
+        if (!current_user_can('manage_tutor')) {
+            wp_send_json_error(array('message' => 'Permission denied'));
+        }
+        
+        global $wpdb;
+        
+        $user_ids = isset($_POST['user_ids']) ? array_map('intval', $_POST['user_ids']) : array();
+        $course_id = isset($_POST['course_id']) ? intval($_POST['course_id']) : 0;
+        
+        if (count($user_ids) < 2 || count($user_ids) > 5) {
+            wp_send_json_error(array('message' => 'Please select 2-5 students to compare'));
+        }
+        
+        $students_data = array();
+        
+        foreach ($user_ids as $user_id) {
+            $user = get_userdata($user_id);
+            if (!$user) continue;
+            
+            $engagement = $this->calculate_engagement_score($user_id, $course_id ?: null);
+            
+            // Get enrolled courses
+            $enrolled_courses = (int) $wpdb->get_var($wpdb->prepare(
+                "SELECT COUNT(DISTINCT course_id) FROM {$wpdb->prefix}tutor_enrollments WHERE user_id = %d",
+                $user_id
+            ));
+            
+            // Get completed courses
+            $completed_courses = (int) $wpdb->get_var($wpdb->prepare(
+                "SELECT COUNT(DISTINCT comment_post_ID) FROM {$wpdb->prefix}comments 
+                 WHERE user_id = %d AND comment_type = 'tutor_course_completed'",
+                $user_id
+            ));
+            
+            // Get lesson completions
+            $lesson_completions = (int) $wpdb->get_var($wpdb->prepare(
+                "SELECT COUNT(*) FROM {$wpdb->prefix}comments 
+                 WHERE user_id = %d AND comment_type = 'tutor_lesson_completed'",
+                $user_id
+            ));
+            
+            // Get quiz stats
+            $quiz_stats = $wpdb->get_row($wpdb->prepare(
+                "SELECT COUNT(*) as count, 
+                        AVG(earned_marks / total_marks * 100) as avg_score,
+                        MAX(earned_marks / total_marks * 100) as best_score
+                 FROM {$wpdb->prefix}tutor_quiz_attempts 
+                 WHERE user_id = %d AND attempt_status = 'attempt_ended' AND total_marks > 0",
+                $user_id
+            ));
+            
+            // Get last activity
+            $last_activity = $wpdb->get_var($wpdb->prepare(
+                "SELECT MAX(comment_date) FROM {$wpdb->prefix}comments 
+                 WHERE user_id = %d AND comment_type IN ('tutor_lesson_completed', 'tutor_course_completed')",
+                $user_id
+            ));
+            
+            $days_since_activity = $last_activity ? 
+                round((time() - strtotime($last_activity)) / DAY_IN_SECONDS) : 
+                999;
+            
+            // Get total time spent
+            $time_spent = 0;
+            $meta_keys = $wpdb->get_col($wpdb->prepare(
+                "SELECT meta_key FROM {$wpdb->usermeta} 
+                 WHERE user_id = %d AND meta_key LIKE %s",
+                $user_id, 'tlat_time_spent_%'
+            ));
+            foreach ($meta_keys as $key) {
+                $time_spent += (int) get_user_meta($user_id, $key, true);
+            }
+            
+            // Format time spent
+            $hours = floor($time_spent / 3600);
+            $minutes = floor(($time_spent % 3600) / 60);
+            $time_formatted = $hours > 0 ? "{$hours}h {$minutes}m" : "{$minutes}m";
+            
+            // Get activity timeline (last 30 days)
+            $activity_by_day = array_fill(0, 30, 0);
+            $activities = $wpdb->get_results($wpdb->prepare(
+                "SELECT DATE(comment_date) as activity_date, COUNT(*) as count
+                 FROM {$wpdb->prefix}comments 
+                 WHERE user_id = %d 
+                 AND comment_type IN ('tutor_lesson_completed', 'tutor_course_completed')
+                 AND comment_date >= DATE_SUB(NOW(), INTERVAL 30 DAY)
+                 GROUP BY DATE(comment_date)",
+                $user_id
+            ));
+            
+            foreach ($activities as $activity) {
+                $day_index = 29 - floor((time() - strtotime($activity->activity_date)) / DAY_IN_SECONDS);
+                if ($day_index >= 0 && $day_index < 30) {
+                    $activity_by_day[$day_index] = (int) $activity->count;
+                }
+            }
+            
+            $students_data[] = array(
+                'id' => $user_id,
+                'name' => $user->display_name,
+                'email' => $user->user_email,
+                'engagement' => $engagement,
+                'enrolled_courses' => $enrolled_courses,
+                'completed_courses' => $completed_courses,
+                'lesson_completions' => $lesson_completions,
+                'quiz_count' => (int) $quiz_stats->count,
+                'avg_quiz_score' => round((float) $quiz_stats->avg_score),
+                'best_quiz_score' => round((float) $quiz_stats->best_score),
+                'days_since_activity' => $days_since_activity === 999 ? '—' : $days_since_activity,
+                'total_time_spent' => $time_formatted,
+                'activity_timeline' => $activity_by_day,
+            );
+        }
+        
+        // Generate timeline labels (last 30 days)
+        $timeline_labels = array();
+        for ($i = 29; $i >= 0; $i--) {
+            $timeline_labels[] = date('M j', strtotime("-{$i} days"));
+        }
+        
+        wp_send_json_success(array(
+            'students' => $students_data,
+            'timeline_labels' => $timeline_labels,
+        ));
     }
 }
 

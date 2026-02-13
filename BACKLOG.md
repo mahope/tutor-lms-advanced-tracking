@@ -68,7 +68,7 @@
 - [x] Engagement score beregning (baseret på aktivitet, quiz scores, completion)
 - [x] At-risk student identificering (ingen aktivitet i X dage, lav progression)
 - [x] Student timeline view (kronologisk aktivitetslog per elev)
-- [ ] Student sammenligning (sammenlign flere elevers progression)
+- [x] Student sammenligning (sammenlign flere elevers progression)
 
 ### Quiz & Assessment Analytics
 - [x] Per-question analytics (hvilke spørgsmål er sværest)
