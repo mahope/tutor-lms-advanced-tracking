@@ -89,7 +89,7 @@
 - [ ] Lesson drop-off points (hvor stopper folk?)
 
 ### Real-time Dashboard
-- [ ] Live student activity feed (hvem gør hvad nu)
+- [x] Live student activity feed (hvem gør hvad nu)
 - [ ] Current active users count + chart
 - [ ] Real-time enrollment notifications
 - [ ] Live completion alerts
