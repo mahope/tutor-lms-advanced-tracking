@@ -117,7 +117,7 @@
 ## 🔧 Phase 3: Growth Features (Prioritet 3)
 
 ### Advanced Features
-- [ ] Webhooks til Zapier/Make (kursus fuldført, ny bruger, etc.)
+- [x] Webhooks til Zapier/Make (kursus fuldført, ny bruger, etc.) — admin UI at Tutor Stats → Webhooks, 7 events, HMAC signing, delivery logs
 - [ ] Scheduled email reports (ugentlig/månedlig PDF til admin)
 - [ ] Goal tracking (sæt mål for completion rate, alert ved afvigelse)
 - [ ] Multisite network dashboard
