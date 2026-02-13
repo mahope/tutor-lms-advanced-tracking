@@ -15,6 +15,11 @@ if (!defined('ABSPATH')) {
  * Auto-activate our plugin after WordPress is loaded
  */
 add_action('plugins_loaded', function() {
+    // Ensure plugin functions are available
+    if (!function_exists('is_plugin_active')) {
+        require_once ABSPATH . 'wp-admin/includes/plugin.php';
+    }
+    
     // Check if our plugin exists but isn't active
     $plugin = 'tutor-lms-advanced-tracking/tutor-lms-advanced-tracking.php';
     

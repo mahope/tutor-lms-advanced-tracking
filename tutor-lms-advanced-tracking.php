@@ -100,14 +100,32 @@ class TutorAdvancedTracking {
      */
     private function load_files() {
         $required_files = array(
+            // Core infrastructure
+            'includes/class-cache.php',
+            'includes/class-tutor-integration.php',
             'includes/class-events-db.php',
-            'includes/class-cli.php',
-            'includes/class-funnel-dashboard.php',
+            // License & updates
             'includes/class-license-validator.php',
             'includes/class-license-settings.php',
             'includes/class-update-checker.php',
             'includes/class-activation-tracking.php',
+            // Features
+            'includes/class-cli.php',
+            'includes/class-funnel-dashboard.php',
             'includes/class-webhooks.php',
+            // Components (loaded for class availability)
+            'includes/class-shortcode.php',
+            'includes/class-dashboard.php',
+            'includes/class-course-stats.php',
+            'includes/class-user-stats.php',
+            'includes/class-advanced-analytics.php',
+            'includes/class-export.php',
+            'includes/class-notifications.php',
+            'includes/class-charts.php',
+            'includes/class-api.php',
+            'includes/class-admin.php',
+            'includes/class-engagement.php',
+            'includes/class-cohort-analytics.php',
         );
         
         foreach ($required_files as $file) {
