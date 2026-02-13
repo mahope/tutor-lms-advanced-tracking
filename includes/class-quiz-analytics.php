@@ -67,6 +67,14 @@ class TutorAdvancedTracking_QuizAnalytics {
                 return current_user_can('manage_tutor');
             },
         ));
+
+        register_rest_route('tlat/v1', '/quizzes/(?P<id>\d+)/time-per-question', array(
+            'methods' => 'GET',
+            'callback' => array($this, 'api_get_time_per_question'),
+            'permission_callback' => function() {
+                return current_user_can('manage_tutor');
+            },
+        ));
     }
     
     /**
@@ -451,6 +459,119 @@ class TutorAdvancedTracking_QuizAnalytics {
     }
     
     /**
+     * Get detailed time-per-question analytics for a quiz
+     *
+     * Aggregates answer timestamps from tutor_quiz_attempt_answers to compute
+     * avg, median, min, max time spent on each question. Also flags questions
+     * where the average time exceeds 1.5x the quiz-wide median (potentially confusing).
+     */
+    public function get_time_per_question($quiz_id) {
+        global $wpdb;
+
+        $questions = $wpdb->get_results($wpdb->prepare(
+            "SELECT question_id, question_title, question_type, question_order
+            FROM {$wpdb->prefix}tutor_quiz_questions
+            WHERE quiz_id = %d
+            ORDER BY question_order ASC",
+            $quiz_id
+        ));
+
+        if (empty($questions)) {
+            return array('questions' => array(), 'confusing' => array(), 'quiz_median_time' => 0);
+        }
+
+        $question_times = array();
+
+        foreach ($questions as $question) {
+            $times = $wpdb->get_col($wpdb->prepare(
+                "SELECT TIMESTAMPDIFF(SECOND, answer_started_at, answer_ended_at) as time_spent
+                FROM {$wpdb->prefix}tutor_quiz_attempt_answers
+                WHERE question_id = %d
+                AND answer_started_at IS NOT NULL
+                AND answer_ended_at IS NOT NULL
+                AND answer_ended_at > answer_started_at",
+                $question->question_id
+            ));
+
+            // Filter out unreasonable outliers (> 30 min per question likely means tab was left open)
+            $times = array_values(array_filter(array_map('intval', $times), function($t) {
+                return $t > 0 && $t <= 1800;
+            }));
+
+            $count = count($times);
+
+            if ($count === 0) {
+                $question_times[] = array(
+                    'id'         => (int) $question->question_id,
+                    'title'      => $question->question_title,
+                    'type'       => $question->question_type,
+                    'order'      => (int) $question->question_order,
+                    'responses'  => 0,
+                    'avg_time'   => 0,
+                    'median_time' => 0,
+                    'min_time'   => 0,
+                    'max_time'   => 0,
+                );
+                continue;
+            }
+
+            sort($times);
+
+            // Median calculation
+            $mid = (int) floor($count / 2);
+            $median = ($count % 2 === 0)
+                ? (int) round(($times[$mid - 1] + $times[$mid]) / 2)
+                : $times[$mid];
+
+            $question_times[] = array(
+                'id'          => (int) $question->question_id,
+                'title'       => $question->question_title,
+                'type'        => $question->question_type,
+                'order'       => (int) $question->question_order,
+                'responses'   => $count,
+                'avg_time'    => (int) round(array_sum($times) / $count),
+                'median_time' => $median,
+                'min_time'    => $times[0],
+                'max_time'    => $times[$count - 1],
+            );
+        }
+
+        // Calculate quiz-wide median of per-question average times
+        $avg_times = array_filter(array_column($question_times, 'avg_time'));
+        $quiz_median_time = 0;
+        if (!empty($avg_times)) {
+            sort($avg_times);
+            $n = count($avg_times);
+            $m = (int) floor($n / 2);
+            $quiz_median_time = ($n % 2 === 0)
+                ? (int) round(($avg_times[$m - 1] + $avg_times[$m]) / 2)
+                : $avg_times[$m];
+        }
+
+        // Identify confusing questions: avg_time > 1.5x quiz median
+        $confusing = array();
+        $threshold = $quiz_median_time * 1.5;
+        if ($threshold > 0) {
+            foreach ($question_times as $qt) {
+                if ($qt['avg_time'] > $threshold && $qt['responses'] >= 3) {
+                    $confusing[] = array(
+                        'id'        => $qt['id'],
+                        'title'     => $qt['title'],
+                        'avg_time'  => $qt['avg_time'],
+                        'ratio'     => round($qt['avg_time'] / $quiz_median_time, 1),
+                    );
+                }
+            }
+        }
+
+        return array(
+            'questions'        => $question_times,
+            'confusing'        => $confusing,
+            'quiz_median_time' => $quiz_median_time,
+        );
+    }
+
+    /**
      * Render quizzes page
      */
     public function render_quizzes_page() {
@@ -607,6 +728,80 @@ class TutorAdvancedTracking_QuizAnalytics {
                                 }
                             });
                         }
+
+                        // Render time-per-question chart
+                        if (response.data.time_data && response.data.time_data.questions) {
+                            var timeCanvas = document.getElementById('tlat-time-per-question-chart');
+                            if (timeCanvas) {
+                                var tq = response.data.time_data.questions;
+                                var medianTime = response.data.time_data.quiz_median_time || 0;
+                                var threshold = medianTime * 1.5;
+                                var labels = [];
+                                var avgData = [];
+                                var medianData = [];
+                                var bgColors = [];
+
+                                for (var i = 0; i < tq.length; i++) {
+                                    labels.push('Q' + (i + 1));
+                                    avgData.push(tq[i].avg_time);
+                                    medianData.push(tq[i].median_time);
+                                    // Color: red if confusing, blue otherwise
+                                    if (threshold > 0 && tq[i].avg_time > threshold && tq[i].responses >= 3) {
+                                        bgColors.push('#f59e0b');
+                                    } else {
+                                        bgColors.push('#3b82f6');
+                                    }
+                                }
+
+                                var timeCtx = timeCanvas.getContext('2d');
+                                new Chart(timeCtx, {
+                                    type: 'bar',
+                                    data: {
+                                        labels: labels,
+                                        datasets: [
+                                            {
+                                                label: '<?php _e('Avg Time (s)', 'tutor-lms-advanced-tracking'); ?>',
+                                                data: avgData,
+                                                backgroundColor: bgColors,
+                                                borderRadius: 4,
+                                            },
+                                            {
+                                                label: '<?php _e('Median Time (s)', 'tutor-lms-advanced-tracking'); ?>',
+                                                data: medianData,
+                                                backgroundColor: 'rgba(139, 92, 246, 0.5)',
+                                                borderRadius: 4,
+                                            }
+                                        ]
+                                    },
+                                    options: {
+                                        responsive: true,
+                                        plugins: {
+                                            legend: { position: 'top' },
+                                            tooltip: {
+                                                callbacks: {
+                                                    afterLabel: function(context) {
+                                                        var idx = context.dataIndex;
+                                                        var q = tq[idx];
+                                                        return '<?php _e('Responses', 'tutor-lms-advanced-tracking'); ?>: ' + q.responses +
+                                                               '\n<?php _e('Min', 'tutor-lms-advanced-tracking'); ?>: ' + q.min_time + 's' +
+                                                               '\n<?php _e('Max', 'tutor-lms-advanced-tracking'); ?>: ' + q.max_time + 's';
+                                                    }
+                                                }
+                                            }
+                                        },
+                                        scales: {
+                                            y: {
+                                                beginAtZero: true,
+                                                title: {
+                                                    display: true,
+                                                    text: '<?php _e('Seconds', 'tutor-lms-advanced-tracking'); ?>'
+                                                }
+                                            }
+                                        }
+                                    }
+                                });
+                            }
+                        }
                     } else {
                         $('#tlat-quiz-modal-content').html('<p style="color: red;"><?php _e('Error loading quiz data', 'tutor-lms-advanced-tracking'); ?></p>');
                     }
@@ -647,6 +842,7 @@ class TutorAdvancedTracking_QuizAnalytics {
         $retries = $this->get_retry_stats($quiz_id);
         $heatmap = $this->get_answer_pattern_heatmap($quiz_id);
         $wrong_answers = $this->get_wrong_answer_analysis($quiz_id);
+        $time_data = $this->get_time_per_question($quiz_id);
         
         ob_start();
         ?>
@@ -661,6 +857,9 @@ class TutorAdvancedTracking_QuizAnalytics {
                 </button>
                 <button class="tlat-tab-btn" data-tab="mistakes" style="padding: 8px 16px; border: 1px solid #e5e7eb; background: white; border-radius: 6px; cursor: pointer;">
                     ❌ <?php _e('Common Mistakes', 'tutor-lms-advanced-tracking'); ?>
+                </button>
+                <button class="tlat-tab-btn" data-tab="time-analysis" style="padding: 8px 16px; border: 1px solid #e5e7eb; background: white; border-radius: 6px; cursor: pointer;">
+                    ⏱ <?php _e('Time Analysis', 'tutor-lms-advanced-tracking'); ?>
                 </button>
             </div>
             
@@ -894,8 +1093,135 @@ class TutorAdvancedTracking_QuizAnalytics {
                     </div>
                 <?php endif; ?>
             </div>
+
+            <!-- Time Analysis Tab -->
+            <div class="tlat-tab-content" data-tab="time-analysis" style="display: none;">
+                <div style="margin-bottom: 20px;">
+                    <h4 style="margin: 0 0 10px 0;">⏱ <?php _e('Time Spent Per Question', 'tutor-lms-advanced-tracking'); ?></h4>
+                    <p style="color: #6b7280; font-size: 13px; margin: 0;">
+                        <?php _e('How long students spend on each question. Questions taking significantly longer may be confusing or poorly worded.', 'tutor-lms-advanced-tracking'); ?>
+                    </p>
+                </div>
+
+                <?php if (empty($time_data['questions']) || array_sum(array_column($time_data['questions'], 'responses')) === 0): ?>
+                    <div style="text-align: center; padding: 40px; background: #f8fafc; border-radius: 8px;">
+                        <span style="font-size: 48px;">⏱</span>
+                        <p style="color: #6b7280; font-weight: 500; margin: 10px 0 0 0;"><?php _e('No timing data available yet. Time data is recorded when students submit quiz answers with timestamps.', 'tutor-lms-advanced-tracking'); ?></p>
+                    </div>
+                <?php else: ?>
+                    <!-- Quiz-wide summary -->
+                    <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 15px; margin-bottom: 25px;">
+                        <div style="text-align: center; padding: 15px; background: #f8fafc; border-radius: 8px;">
+                            <div style="font-size: 24px; font-weight: bold; color: #3b82f6;">
+                                <?php echo esc_html(gmdate('i:s', $time_data['quiz_median_time'])); ?>
+                            </div>
+                            <div style="color: #6b7280; font-size: 12px;"><?php _e('Median Time / Question', 'tutor-lms-advanced-tracking'); ?></div>
+                        </div>
+                        <div style="text-align: center; padding: 15px; background: #f8fafc; border-radius: 8px;">
+                            <div style="font-size: 24px; font-weight: bold; color: #f59e0b;">
+                                <?php echo count($time_data['confusing']); ?>
+                            </div>
+                            <div style="color: #6b7280; font-size: 12px;"><?php _e('Potentially Confusing', 'tutor-lms-advanced-tracking'); ?></div>
+                        </div>
+                        <div style="text-align: center; padding: 15px; background: #f8fafc; border-radius: 8px;">
+                            <?php
+                            $total_responses_time = array_sum(array_column($time_data['questions'], 'responses'));
+                            ?>
+                            <div style="font-size: 24px; font-weight: bold; color: #8b5cf6;">
+                                <?php echo esc_html($total_responses_time); ?>
+                            </div>
+                            <div style="color: #6b7280; font-size: 12px;"><?php _e('Timed Responses', 'tutor-lms-advanced-tracking'); ?></div>
+                        </div>
+                    </div>
+
+                    <!-- Time per question bar chart -->
+                    <div style="margin-bottom: 25px;">
+                        <h4 style="margin-bottom: 15px;"><?php _e('Average Time Per Question (seconds)', 'tutor-lms-advanced-tracking'); ?></h4>
+                        <canvas id="tlat-time-per-question-chart" height="120"></canvas>
+                    </div>
+
+                    <!-- Confusing questions alert -->
+                    <?php if (!empty($time_data['confusing'])): ?>
+                    <div style="margin-bottom: 25px; padding: 15px; background: #fef3c7; border: 1px solid #f59e0b; border-radius: 8px;">
+                        <strong style="color: #92400e;">⚠ <?php _e('Potentially Confusing Questions', 'tutor-lms-advanced-tracking'); ?></strong>
+                        <p style="color: #92400e; font-size: 13px; margin: 5px 0 10px 0;">
+                            <?php _e('These questions take significantly longer than average (>1.5x the quiz median). Consider reviewing them for clarity.', 'tutor-lms-advanced-tracking'); ?>
+                        </p>
+                        <div style="display: grid; gap: 8px;">
+                            <?php foreach ($time_data['confusing'] as $cq): ?>
+                            <div style="display: flex; align-items: center; gap: 12px; padding: 10px; background: rgba(255,255,255,0.7); border-radius: 6px;">
+                                <div style="font-size: 20px; font-weight: bold; color: #f59e0b; min-width: 60px;">
+                                    <?php echo esc_html(gmdate('i:s', $cq['avg_time'])); ?>
+                                </div>
+                                <div style="flex: 1;">
+                                    <div style="font-weight: 500; font-size: 13px;"><?php echo esc_html(wp_trim_words($cq['title'], 12)); ?></div>
+                                    <div style="font-size: 11px; color: #92400e;">
+                                        <?php printf(
+                                            __('%sx longer than quiz median', 'tutor-lms-advanced-tracking'),
+                                            esc_html($cq['ratio'])
+                                        ); ?>
+                                    </div>
+                                </div>
+                            </div>
+                            <?php endforeach; ?>
+                        </div>
+                    </div>
+                    <?php endif; ?>
+
+                    <!-- Detailed stats table -->
+                    <div>
+                        <h4 style="margin-bottom: 15px;"><?php _e('Detailed Time Statistics', 'tutor-lms-advanced-tracking'); ?></h4>
+                        <table class="wp-list-table widefat fixed" style="background: white;">
+                            <thead>
+                                <tr>
+                                    <th style="width: 40px;">#</th>
+                                    <th><?php _e('Question', 'tutor-lms-advanced-tracking'); ?></th>
+                                    <th style="width: 80px;"><?php _e('Responses', 'tutor-lms-advanced-tracking'); ?></th>
+                                    <th style="width: 80px;"><?php _e('Avg', 'tutor-lms-advanced-tracking'); ?></th>
+                                    <th style="width: 80px;"><?php _e('Median', 'tutor-lms-advanced-tracking'); ?></th>
+                                    <th style="width: 80px;"><?php _e('Min', 'tutor-lms-advanced-tracking'); ?></th>
+                                    <th style="width: 80px;"><?php _e('Max', 'tutor-lms-advanced-tracking'); ?></th>
+                                    <th style="width: 80px;"><?php _e('Status', 'tutor-lms-advanced-tracking'); ?></th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <?php foreach ($time_data['questions'] as $idx => $qt): ?>
+                                <tr<?php echo ($time_data['quiz_median_time'] > 0 && $qt['avg_time'] > $time_data['quiz_median_time'] * 1.5 && $qt['responses'] >= 3) ? ' style="background: #fef3c7;"' : ''; ?>>
+                                    <td style="color: #6b7280;">Q<?php echo $idx + 1; ?></td>
+                                    <td><?php echo esc_html(wp_trim_words($qt['title'], 10)); ?></td>
+                                    <td><?php echo esc_html($qt['responses']); ?></td>
+                                    <td style="font-weight: 600;"><?php echo $qt['responses'] > 0 ? esc_html(gmdate('i:s', $qt['avg_time'])) : '—'; ?></td>
+                                    <td><?php echo $qt['responses'] > 0 ? esc_html(gmdate('i:s', $qt['median_time'])) : '—'; ?></td>
+                                    <td style="color: #10b981;"><?php echo $qt['responses'] > 0 ? esc_html(gmdate('i:s', $qt['min_time'])) : '—'; ?></td>
+                                    <td style="color: #ef4444;"><?php echo $qt['responses'] > 0 ? esc_html(gmdate('i:s', $qt['max_time'])) : '—'; ?></td>
+                                    <td>
+                                        <?php if ($qt['responses'] === 0): ?>
+                                            <span style="font-size: 11px; color: #9ca3af;"><?php _e('No data', 'tutor-lms-advanced-tracking'); ?></span>
+                                        <?php elseif ($time_data['quiz_median_time'] > 0 && $qt['avg_time'] > $time_data['quiz_median_time'] * 1.5 && $qt['responses'] >= 3): ?>
+                                            <span style="font-size: 11px; background: #fef3c7; color: #92400e; padding: 2px 8px; border-radius: 10px; font-weight: 500;">⚠ <?php _e('Slow', 'tutor-lms-advanced-tracking'); ?></span>
+                                        <?php else: ?>
+                                            <span style="font-size: 11px; background: #d1fae5; color: #065f46; padding: 2px 8px; border-radius: 10px; font-weight: 500;">✓ <?php _e('Normal', 'tutor-lms-advanced-tracking'); ?></span>
+                                        <?php endif; ?>
+                                    </td>
+                                </tr>
+                                <?php endforeach; ?>
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <!-- Tips -->
+                    <div style="margin-top: 20px; padding: 15px; background: #eff6ff; border-radius: 8px;">
+                        <strong style="font-size: 13px;">💡 <?php _e('Tips:', 'tutor-lms-advanced-tracking'); ?></strong>
+                        <ul style="margin: 10px 0 0 0; padding-left: 20px; font-size: 13px; color: #1e40af;">
+                            <li><?php _e('Questions with high average time may need clearer wording or simpler answer options', 'tutor-lms-advanced-tracking'); ?></li>
+                            <li><?php _e('Very short times might indicate questions that are too easy or can be guessed', 'tutor-lms-advanced-tracking'); ?></li>
+                            <li><?php _e('Compare time spent with correct rate — long time + low correct rate = confusing question', 'tutor-lms-advanced-tracking'); ?></li>
+                        </ul>
+                    </div>
+                <?php endif; ?>
+            </div>
         </div>
-        
+
         <script>
         (function() {
             // Tab switching
@@ -931,6 +1257,7 @@ class TutorAdvancedTracking_QuizAnalytics {
             'html' => $html,
             'title' => $quiz->post_title,
             'distribution' => $distribution,
+            'time_data' => $time_data,
         ));
     }
     
@@ -947,6 +1274,14 @@ class TutorAdvancedTracking_QuizAnalytics {
     public function api_get_quiz_questions($request) {
         $quiz_id = $request->get_param('id');
         return rest_ensure_response($this->get_question_analytics($quiz_id));
+    }
+
+    /**
+     * REST API: Get time per question
+     */
+    public function api_get_time_per_question($request) {
+        $quiz_id = $request->get_param('id');
+        return rest_ensure_response($this->get_time_per_question($quiz_id));
     }
 }
 
