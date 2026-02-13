@@ -16,6 +16,7 @@ export default function Home() {
           </div>
           <div className="hidden md:flex items-center gap-8">
             <a href="#features" className="text-gray-600 hover:text-gray-900 transition">Features</a>
+            <a href="#compare" className="text-gray-600 hover:text-gray-900 transition">Compare</a>
             <a href="#pricing" className="text-gray-600 hover:text-gray-900 transition">Pricing</a>
             <a href="#faq" className="text-gray-600 hover:text-gray-900 transition">FAQ</a>
             <a href="https://docs.tutor-tracking.com" className="text-gray-600 hover:text-gray-900 transition">Docs</a>
@@ -224,8 +225,146 @@ export default function Home() {
         </div>
       </section>
 
+      {/* Comparison Table */}
+      <section id="compare" className="py-20 bg-gray-50 px-4">
+        <div className="max-w-4xl mx-auto">
+          <div className="text-center mb-12">
+            <h2 className="text-4xl font-bold text-gray-900 mb-4">TLAT vs. Native Tutor LMS Reports</h2>
+            <p className="text-xl text-gray-600">See why course creators upgrade to TLAT</p>
+          </div>
+
+          <div className="overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-lg">
+            <table className="w-full">
+              <thead>
+                <tr className="bg-gray-50 border-b border-gray-200">
+                  <th className="text-left py-4 px-6 font-semibold text-gray-900">Feature</th>
+                  <th className="text-center py-4 px-6 font-semibold text-gray-500">Native Tutor LMS</th>
+                  <th className="text-center py-4 px-6 font-semibold text-indigo-600">TLAT</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-gray-100">
+                <tr>
+                  <td className="py-4 px-6 text-gray-700">Completion funnel analysis</td>
+                  <td className="py-4 px-6 text-center">
+                    <svg className="w-5 h-5 text-red-400 mx-auto" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                    </svg>
+                  </td>
+                  <td className="py-4 px-6 text-center">
+                    <svg className="w-5 h-5 text-green-500 mx-auto" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                    </svg>
+                  </td>
+                </tr>
+                <tr className="bg-gray-50/50">
+                  <td className="py-4 px-6 text-gray-700">Cohort comparison</td>
+                  <td className="py-4 px-6 text-center">
+                    <svg className="w-5 h-5 text-red-400 mx-auto" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                    </svg>
+                  </td>
+                  <td className="py-4 px-6 text-center">
+                    <svg className="w-5 h-5 text-green-500 mx-auto" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                    </svg>
+                  </td>
+                </tr>
+                <tr>
+                  <td className="py-4 px-6 text-gray-700">Real-time visual charts</td>
+                  <td className="py-4 px-6 text-center">
+                    <span className="text-gray-400 text-sm">Basic</span>
+                  </td>
+                  <td className="py-4 px-6 text-center">
+                    <svg className="w-5 h-5 text-green-500 mx-auto" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                    </svg>
+                  </td>
+                </tr>
+                <tr className="bg-gray-50/50">
+                  <td className="py-4 px-6 text-gray-700">Drop-off point identification</td>
+                  <td className="py-4 px-6 text-center">
+                    <svg className="w-5 h-5 text-red-400 mx-auto" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                    </svg>
+                  </td>
+                  <td className="py-4 px-6 text-center">
+                    <svg className="w-5 h-5 text-green-500 mx-auto" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                    </svg>
+                  </td>
+                </tr>
+                <tr>
+                  <td className="py-4 px-6 text-gray-700">Quiz question analytics</td>
+                  <td className="py-4 px-6 text-center">
+                    <span className="text-gray-400 text-sm">Pass/Fail only</span>
+                  </td>
+                  <td className="py-4 px-6 text-center">
+                    <span className="text-indigo-600 text-sm font-medium">Per-question</span>
+                  </td>
+                </tr>
+                <tr className="bg-gray-50/50">
+                  <td className="py-4 px-6 text-gray-700">CSV/JSON export</td>
+                  <td className="py-4 px-6 text-center">
+                    <span className="text-gray-400 text-sm">Limited</span>
+                  </td>
+                  <td className="py-4 px-6 text-center">
+                    <svg className="w-5 h-5 text-green-500 mx-auto" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                    </svg>
+                  </td>
+                </tr>
+                <tr>
+                  <td className="py-4 px-6 text-gray-700">REST API access</td>
+                  <td className="py-4 px-6 text-center">
+                    <svg className="w-5 h-5 text-red-400 mx-auto" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                    </svg>
+                  </td>
+                  <td className="py-4 px-6 text-center">
+                    <svg className="w-5 h-5 text-green-500 mx-auto" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                    </svg>
+                  </td>
+                </tr>
+                <tr className="bg-gray-50/50">
+                  <td className="py-4 px-6 text-gray-700">WP-CLI commands</td>
+                  <td className="py-4 px-6 text-center">
+                    <svg className="w-5 h-5 text-red-400 mx-auto" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                    </svg>
+                  </td>
+                  <td className="py-4 px-6 text-center">
+                    <svg className="w-5 h-5 text-green-500 mx-auto" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                    </svg>
+                  </td>
+                </tr>
+                <tr>
+                  <td className="py-4 px-6 text-gray-700">Instructor role-based views</td>
+                  <td className="py-4 px-6 text-center">
+                    <span className="text-gray-400 text-sm">Basic</span>
+                  </td>
+                  <td className="py-4 px-6 text-center">
+                    <span className="text-indigo-600 text-sm font-medium">Advanced + Privacy</span>
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+
+          <div className="text-center mt-8">
+            <a 
+              href="#pricing" 
+              className="inline-block bg-indigo-500 hover:bg-indigo-600 text-white px-8 py-3 rounded-xl font-semibold transition"
+            >
+              Upgrade Your Analytics →
+            </a>
+          </div>
+        </div>
+      </section>
+
       {/* How It Works */}
-      <section className="py-20 bg-gray-50 px-4">
+      <section className="py-20 px-4">
         <div className="max-w-4xl mx-auto">
           <div className="text-center mb-16">
             <h2 className="text-4xl font-bold text-gray-900 mb-4">Up and Running in 5 Minutes</h2>
