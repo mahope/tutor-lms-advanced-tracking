@@ -166,6 +166,39 @@ $avg_quiz_score = $courses ? round(array_sum(array_column($courses, 'avg_quiz_sc
         </div>
     </div>
 
+    <!-- Engagement Analytics Section -->
+    <?php 
+    // Enqueue engagement assets
+    wp_enqueue_style(
+        'tutor-advanced-engagement',
+        TUTOR_ADVANCED_TRACKING_PLUGIN_URL . 'assets/css/engagement.css',
+        array(),
+        TUTOR_ADVANCED_TRACKING_VERSION
+    );
+    
+    wp_enqueue_script(
+        'tutor-advanced-engagement',
+        TUTOR_ADVANCED_TRACKING_PLUGIN_URL . 'assets/js/engagement.js',
+        array('jquery', 'tutor-advanced-charts'),
+        TUTOR_ADVANCED_TRACKING_VERSION,
+        true
+    );
+    
+    wp_localize_script('tutor-advanced-engagement', 'tutorAdvancedAdmin', array(
+        'ajaxurl' => admin_url('admin-ajax.php'),
+        'nonce' => wp_create_nonce('tutor_advanced_engagement_' . get_current_user_id()),
+        'strings' => array(
+            'loading' => __('Loading...', 'tutor-lms-advanced-tracking'),
+            'no_data' => __('No data available', 'tutor-lms-advanced-tracking'),
+            'error' => __('An error occurred', 'tutor-lms-advanced-tracking')
+        )
+    ));
+    
+    // Render engagement dashboard
+    $engagement = new TutorAdvancedTracking_Engagement();
+    $engagement->render_engagement_dashboard();
+    ?>
+
     <!-- Courses Table -->
     <?php if (!empty($courses)): ?>
         <div class="tutor-admin-card">

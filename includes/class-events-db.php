@@ -63,6 +63,40 @@ class TutorAdvancedTracking_EventsDB {
             KEY updated (updated_at)
         ) {$charset_collate};";
 
+        // Login sessions tracking
+        $login_sessions_table = $wpdb->prefix . 'tlat_login_sessions';
+        $sql[] = "CREATE TABLE {$login_sessions_table} (
+            id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
+            user_id BIGINT UNSIGNED NOT NULL,
+            session_start DATETIME NOT NULL,
+            session_end DATETIME NULL,
+            last_activity DATETIME NOT NULL,
+            session_length_seconds INT UNSIGNED NULL,
+            ip_address VARCHAR(45) NULL,
+            user_agent VARCHAR(500) NULL,
+            session_data LONGTEXT NULL,
+            PRIMARY KEY (id),
+            KEY user_id (user_id),
+            KEY session_start (session_start),
+            KEY session_end (session_end),
+            KEY activity (last_activity),
+            KEY ip_address (ip_address(45))
+        ) {$charset_collate};";
+
+        // Engagement events tracking
+        $engagement_events_table = $wpdb->prefix . 'tlat_engagement_events';
+        $sql[] = "CREATE TABLE {$engagement_events_table} (
+            id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
+            user_id BIGINT UNSIGNED NOT NULL,
+            event_type VARCHAR(64) NOT NULL,
+            event_time DATETIME NOT NULL,
+            meta LONGTEXT NULL,
+            PRIMARY KEY (id),
+            KEY user_id (user_id),
+            KEY event_type (event_type),
+            KEY event_time (event_time)
+        ) {$charset_collate};";
+
         foreach ($sql as $statement) { dbDelta($statement); }
     }
     public static function uninstall() {
@@ -71,6 +105,8 @@ class TutorAdvancedTracking_EventsDB {
             $wpdb->prefix . 'tlat_events',
             $wpdb->prefix . 'tlat_agg_daily',
             $wpdb->prefix . 'tlat_video_progress',
+            $wpdb->prefix . 'tlat_login_sessions',
+            $wpdb->prefix . 'tlat_engagement_events',
         );
         foreach ($tables as $t) { $wpdb->query("DROP TABLE IF EXISTS {$t}"); }
     }
