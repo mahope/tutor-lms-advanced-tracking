@@ -95,6 +95,20 @@
 - [ ] Live completion alerts
 - [ ] WebSocket eller Server-Sent Events integration
 
+### Gamification & Motivation
+- [ ] Student leaderboard per kursus (opt-in, anonymiseret option)
+- [ ] Achievement badges system (first quiz, perfect score, speed demon)
+- [ ] Progress milestones med visuel celebration
+- [ ] Weekly progress email til studerende (digest af fremskridt)
+- [ ] Instructor "kudos" system (anerkend studerende fra admin)
+
+### Course Health Dashboard
+- [ ] Course health score widget (samlet vurdering 0-100)
+- [ ] Bottleneck detection (hvilke lessons skaber drop-off)
+- [ ] Content freshness indicator (hvornår sidst opdateret)
+- [ ] Suggested improvements baseret på data
+- [ ] A/B test tracking for course content
+
 ### Custom Reports
 - [ ] Custom date range selector på alle dashboards
 - [ ] PDF report generation med branding
