@@ -109,6 +109,13 @@
 - [ ] Suggested improvements baseret på data
 - [ ] A/B test tracking for course content
 
+### Admin Feature Control
+- [ ] Feature toggle dashboard (Tutor Stats → Settings → Features)
+- [ ] Slå individuelle analytics-moduler til/fra (cohort, funnel, quiz analytics, etc.)
+- [ ] Per-rolle feature adgang (admin kan alt, instructor kun egne kurser)
+- [ ] Performance mode (deaktiver tunge features på langsom hosting)
+- [ ] Gem feature-præferencer i wp_options med UI reset-knap
+
 ### Custom Reports
 - [ ] Custom date range selector på alle dashboards
 - [ ] PDF report generation med branding
