@@ -125,6 +125,7 @@ class TutorAdvancedTracking {
             'includes/class-api.php',
             'includes/class-admin.php',
             'includes/class-engagement.php',
+            'includes/class-lesson-engagement.php',
             'includes/class-cohort-analytics.php',
             'includes/class-student-analytics.php',
             'includes/class-quiz-analytics.php',
