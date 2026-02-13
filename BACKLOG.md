@@ -84,7 +84,7 @@
 - [x] Assignment submission timeline
 - [x] Login frequency og session-længde
 - [x] Device/browser breakdown chart
-- [ ] Peak activity hours heatmap
+- [x] Peak activity hours heatmap
 - [ ] Content engagement score per lesson
 - [ ] Lesson drop-off points (hvor stopper folk?)
 
