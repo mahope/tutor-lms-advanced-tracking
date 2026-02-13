@@ -104,6 +104,7 @@ class TutorAdvancedTracking {
             'includes/class-cache.php',
             'includes/class-tutor-integration.php',
             'includes/class-events-db.php',
+            'includes/class-live-activity.php',
             // License & updates
             'includes/class-license-validator.php',
             'includes/class-license-settings.php',
@@ -170,7 +171,8 @@ class TutorAdvancedTracking {
             'TutorAdvancedTracking_VideoAnalytics',
             'TutorAdvancedTracking_AssignmentAnalytics',
             'TutorAdvancedTracking_StudentAnalytics',
-            'TutorAdvancedTracking_QuizAnalytics'
+            'TutorAdvancedTracking_QuizAnalytics',
+            'TutorAdvancedTracking_LiveActivity'
         );
         
         foreach ($components as $component) {

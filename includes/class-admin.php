@@ -101,6 +101,16 @@ class TutorAdvancedTracking_Admin {
             'tutor-advanced-stats-engagement',
             array($this, 'render_engagement_page')
         );
+        
+        // Live Activity submenu
+        add_submenu_page(
+            'tutor-advanced-stats',
+            __('Live Activity', 'tutor-lms-advanced-tracking'),
+            __('Live Activity', 'tutor-lms-advanced-tracking'),
+            'manage_options',
+            'tutor-advanced-stats-live-activity',
+            array($this, 'render_live_activity_page')
+        );
     }
     
     /**
@@ -656,5 +666,23 @@ class TutorAdvancedTracking_Admin {
         
         // Render the page
         include TUTOR_ADVANCED_TRACKING_PLUGIN_DIR . 'templates/admin-engagement.php';
+    }
+    
+    /**
+     * Render live activity feed page
+     */
+    public function render_live_activity_page() {
+        // Enqueue live activity assets
+        wp_enqueue_style(
+            'tutor-advanced-live-activity',
+            TUTOR_ADVANCED_TRACKING_PLUGIN_URL . 'assets/css/live-activity.css',
+            array(),
+            TUTOR_ADVANCED_TRACKING_VERSION
+        );
+        
+        // Note: JavaScript is inline in the template for simplicity
+        
+        // Render the page
+        include TUTOR_ADVANCED_TRACKING_PLUGIN_DIR . 'templates/admin-live-activity.php';
     }
 }
