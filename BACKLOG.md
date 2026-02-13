@@ -238,3 +238,23 @@ Før hver release, verificer:
 - [ ] Export funktioner (CSV, JSON)
 - [ ] Chart.js visualiseringer
 - [ ] Responsive design på tablet
+
+## February 2026 — Nye muligheder
+
+### Fra codebase analyse og research
+
+
+- [ ] Mobile analytics dashboard
+- [ ] Student progress PDF export
+- [ ] Quiz attempt replay feature
+- [ ] Email notifications for inactivity
+- [ ] Course completion certificates
+- [ ] Live session tracking (WebSocket)
+- [ ] Multi-instructor support
+- [ ] Custom report builder
+- [ ] AI-powered content recommendations
+- [ ] Integration with Zoom/Meet attendance
+
+
+> 💡 Disse er forslag — evaluer og prioriter baseret på værdi/indsats.
+
