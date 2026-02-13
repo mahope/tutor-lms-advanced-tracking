@@ -45,8 +45,8 @@
 ## 🚀 Phase 1: Launch Ready (Prioritet 1)
 
 ### Licensserver Deployment
-- [ ] Deploy tlat-license-server til Dokploy (license.tutor-tracking.com) — **READY**: Dockerfile + docker-compose + deployment guide klar i repo. Kræver Dokploy UI login for at fuldføre.
-- [ ] Sæt op HTTPS med Let's Encrypt
+- [x] Deploy tlat-license-server til Dokploy — deployed til licenses.holstjensen.eu (Dokploy, auto-deploy fra GitHub)
+- [x] Sæt op HTTPS med Let's Encrypt — certificateType: letsencrypt, verified working
 - [x] Tilføj rate limiting (express-rate-limit)
 - [x] Monitoring: uptime check + error alerts (healthcheck.sh + docs/monitoring.md)
 - [x] Backup cron for SQLite database (backup-db.sh + retention + offsite docs)
