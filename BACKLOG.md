@@ -103,7 +103,7 @@
 ### Analytics
 - [x] Plausible på landing page (analytics.holstjensen.eu)
 - [x] Event tracking: demo_clicked, pricing_viewed, checkout_started
-- [ ] License activation tracking i admin
+- [x] License activation tracking i admin (TLAT_Activation_Tracking class + UI)
 
 ---
 
