@@ -82,7 +82,7 @@
 ### Engagement Analytics
 - [x] Video watch completion rates (kræver video tracking)
 - [x] Assignment submission timeline
-- [ ] Login frequency og session-længde
+- [x] Login frequency og session-længde
 - [ ] Device/browser breakdown chart
 - [ ] Peak activity hours heatmap
 - [ ] Content engagement score per lesson
