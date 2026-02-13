@@ -8,7 +8,93 @@ if (!defined('ABSPATH')) {
     exit;
 }
 
-class LiveActivityTest extends WP_UnitTestCase {
+/**
+ * Mock WordPress functions needed for tests
+ */
+if (!function_exists('wp_create_nonce')) {
+    function wp_create_nonce($action) {
+        return 'mock_nonce_' . $action;
+    }
+}
+
+if (!function_exists('wp_send_json_success')) {
+    function wp_send_json_success($data = null) {
+        echo json_encode(array('success' => true, 'data' => $data));
+    }
+}
+
+if (!function_exists('wp_send_json_error')) {
+    function wp_send_json_error($message = '', $data = null) {
+        echo json_encode(array('success' => false, 'data' => $data, 'message' => $message));
+    }
+}
+
+if (!function_exists('wp_verify_nonce')) {
+    function wp_verify_nonce($nonce, $action) {
+        return $nonce === 'mock_nonce_' . $action;
+    }
+}
+
+if (!function_exists('current_user_can')) {
+    function current_user_can($cap) {
+        return true; // Allow all for testing
+    }
+}
+
+if (!function_exists('is_user_logged_in')) {
+    function is_user_logged_in() {
+        return true;
+    }
+}
+
+if (!function_exists('get_current_user_id')) {
+    function get_current_user_id() {
+        return 1;
+    }
+}
+
+if (!function_exists('get_userdata')) {
+    function get_userdata($id) {
+        return (object) array(
+            'ID' => $id,
+            'display_name' => 'Test User ' . $id,
+            'user_login' => 'testuser' . $id
+        );
+    }
+}
+
+if (!function_exists('get_post')) {
+    function get_post($id) {
+        if (empty($id)) {
+            return null;
+        }
+        return (object) array(
+            'ID' => $id,
+            'post_title' => 'Test Post ' . $id,
+            'post_type' => 'course'
+        );
+    }
+}
+
+if (!function_exists('wp_get_post_parent_id')) {
+    function wp_get_post_parent_id($id) {
+        return 0;
+    }
+}
+
+if (!function_exists('date_i18n')) {
+    function date_i18n($format, $timestamp = null) {
+        return date($format, $timestamp ?: time());
+    }
+}
+
+if (!function_exists('get_option')) {
+    function get_option($option, $default = false) {
+        return $default;
+    }
+}
+
+class LiveActivityTest extends PHPUnit_Framework_TestCase {
     
     /**
      * Test instance creation
