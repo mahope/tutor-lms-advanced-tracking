@@ -98,7 +98,7 @@
 - [ ] Tutor LMS Facebook group post
 - [ ] r/Wordpress post
 - [ ] ProductHunt launch forberedelse
-- [ ] 10 relevante blogs til guest post/review outreach
+- [x] 10 relevante blogs til guest post/review outreach (docs/outreach/BLOG-OUTREACH-LIST.md)
 
 ### Analytics
 - [x] Plausible på landing page (analytics.holstjensen.eu)
