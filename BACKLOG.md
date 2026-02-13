@@ -83,7 +83,7 @@
 - [x] Video watch completion rates (kræver video tracking)
 - [x] Assignment submission timeline
 - [x] Login frequency og session-længde
-- [ ] Device/browser breakdown chart
+- [x] Device/browser breakdown chart
 - [ ] Peak activity hours heatmap
 - [ ] Content engagement score per lesson
 - [ ] Lesson drop-off points (hvor stopper folk?)

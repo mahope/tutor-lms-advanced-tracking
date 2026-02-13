@@ -278,6 +278,9 @@ class TutorAdvancedTracking_Engagement {
             case 'engagement_overview':
                 $data = $this->get_engagement_overview();
                 break;
+            case 'device_browser':
+                $data = $this->get_device_browser_data(intval($_POST['days'] ?? 30));
+                break;
             default:
                 wp_send_json_error(__('Invalid action', 'tutor-lms-advanced-tracking'));
         }
@@ -684,6 +687,60 @@ class TutorAdvancedTracking_Engagement {
                 </div>
             </div>
             
+            <!-- Device/Browser Breakdown Charts -->
+            <div class="device-browser-section" style="margin-top: 30px; padding-top: 20px; border-top: 1px solid #e0e0e0;">
+                <h4 style="margin-bottom: 15px;"><?php _e('Device & Browser Breakdown', 'tutor-lms-advanced-tracking'); ?></h4>
+                <p class="description" style="margin-bottom: 15px; color: #666;">
+                    <?php _e('Shows the distribution of devices and browsers used by students to access the learning platform.', 'tutor-lms-advanced-tracking'); ?>
+                </p>
+                
+                <div class="device-browser-charts" style="display: flex; gap: 20px; flex-wrap: wrap; margin-bottom: 20px;">
+                    <div class="chart-wrapper-half" style="flex: 1; min-width: 280px; max-width: 400px; background: #fff; padding: 15px; border-radius: 8px; box-shadow: 0 1px 3px rgba(0,0,0,0.1);">
+                        <h5 style="margin: 0 0 10px 0; font-size: 14px; color: #555;">
+                            <span style="margin-right: 8px;">💻</span><?php _e('Device Type', 'tutor-lms-advanced-tracking'); ?>
+                        </h5>
+                        <div style="position: relative; height: 220px;">
+                            <canvas id="device-chart"></canvas>
+                        </div>
+                    </div>
+                    
+                    <div class="chart-wrapper-half" style="flex: 1; min-width: 280px; max-width: 400px; background: #fff; padding: 15px; border-radius: 8px; box-shadow: 0 1px 3px rgba(0,0,0,0.1);">
+                        <h5 style="margin: 0 0 10px 0; font-size: 14px; color: #555;">
+                            <span style="margin-right: 8px;">🌐</span><?php _e('Browser', 'tutor-lms-advanced-tracking'); ?>
+                        </h5>
+                        <div style="position: relative; height: 220px;">
+                            <canvas id="browser-chart"></canvas>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Summary Table -->
+                <div id="device-browser-summary" class="device-browser-summary" style="background: #f9f9f9; padding: 15px; border-radius: 8px;">
+                    <table class="widefat" style="border-collapse: collapse; margin: 0;">
+                        <thead>
+                            <tr style="background: #f5f5f5;">
+                                <th style="padding: 10px; text-align: left; border: 1px solid #e0e0e0; font-weight: 600;">
+                                    <?php _e('Device / Browser', 'tutor-lms-advanced-tracking'); ?>
+                                </th>
+                                <th style="padding: 10px; text-align: center; border: 1px solid #e0e0e0; font-weight: 600; width: 100px;">
+                                    <?php _e('Sessions', 'tutor-lms-advanced-tracking'); ?>
+                                </th>
+                                <th style="padding: 10px; text-align: center; border: 1px solid #e0e0e0; font-weight: 600; width: 100px;">
+                                    <?php _e('Percentage', 'tutor-lms-advanced-tracking'); ?>
+                                </th>
+                            </tr>
+                        </thead>
+                        <tbody id="device-browser-tbody">
+                            <tr>
+                                <td colspan="3" style="padding: 20px; text-align: center; border: 1px solid #e0e0e0;">
+                                    <span class="loading"><?php _e('Loading...', 'tutor-lms-advanced-tracking'); ?></span>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+            
             <!-- Top Active Students Table -->
             <div class="top-students-section">
                 <h4><?php _e('Top Active Students', 'tutor-lms-advanced-tracking'); ?></h4>
@@ -698,6 +755,439 @@ class TutorAdvancedTracking_Engagement {
                     </thead>
                     <tbody id="top-students-body">
                         <tr><td colspan="4" class="loading"><?php _e('Loading...', 'tutor-lms-advanced-tracking'); ?></td></tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+        <?php
+    }
+    
+    // =========================================================================
+    // Device/Browser Tracking Methods
+    // =========================================================================
+
+    /**
+     * Parse user agent to extract device type
+     */
+    public function parse_device_type($user_agent) {
+        if (empty($user_agent)) {
+            return __('Unknown', 'tutor-lms-advanced-tracking');
+        }
+
+        $user_agent = strtolower($user_agent);
+
+        // Check for mobile devices
+        if (preg_match('/(android|bb\d+|meego).+mobile|avantgo|bada\/|blackberry|blazer|compal|elaine|fennec|hiptop|iemobile|ip(hone|od)|iris|kindle|lge |maemo|midp|mmp|mobile.+firefox|netfront|opera m(ob|in)i|palm( os)?|phone|p(ixi|re)\/|plucker|pocket|psp|series(4|6)0|symbian|treo|up\.(browser|link)|vodafone|wap|windows ce|xda|xiino/i', $user_agent) || 
+            preg_match('/1207|6310|6590|3gso|4thp|50[1-6]i|770s|802s|a wa|abac|ac(er|oo|s\-)|ai(ko|rn)|al(av|ca|co)|amoi|an(ex|ny|yw)|aptu|ar(ch|go)|as(te|us)|attw|au(di|\-m|r |s )|avan|be(ck|ll|nq)|bi(lb|rd)|bl(ac|az)|br(e|v)w|bumb|bw\-(n|u)|c55\/|capi|ccwa|cdm\-|cell|chtm|cldc|cmd\-|co(mp|nd)|craw|da(it|ll|ng)|dbte|dc\-s|devi|dica|dmob|do(c|p)o|ds(12|\-d)|el(49|ai)|em(l2|ul)|er(ic|k0)|esl8|ez([4-7]0|os|wa|ze)|fetc|fly(\-|_)|g1 u|g560|gene|gf\-5|g\-mo|go(\.w|od)|g450|gp\-m|t(e|v)|goto|hiptop|hs(c|\-i)|hp(i|ip)|hs\-l|ht(c(\-| |_|a|g|p|s|t)|tp)|hu(aw|tc)|i\-(20|go|ma)|i230|iac( |\-|\/)|ibro|idea|ig01|ikom|im1k|inno|ipaq|iris|ja(t|v)a|jbro|jemu|jigs|kddi|keji|kgt( |\/)|klon|kpt |kwc\-|kyo(c|k)|le(no|xi)|lg( g|\/(k|l|u)|50|54|\-[a-w])|libw|lynx|m1\-w|m3ga|m50\/|ma(te|ui|xo)|mc(01|21|ca)|m\-cr|me(rc|ri)|mi(o8|oa|ts)|mmef|mo(01|02|bi|de|do|t(\-| |o|v)|zz)|mt(50|p1|v )|mwbp|mywa|n10[0-2]|n20[2-3]|n30(0|2)|n50(0|2|5)|n7(0(0|1)|10)|ne((c|m)\-|on|tf|wf|wg|wt)|nok(6|i)|nzph|o2im|op(ti|wv)|oran|owg1|p800|pan(a|d|t)|pdxg|pg(13|\-([1-8]|c))|phil|pire|pl(ay|uc)|pn\-2|po(ck|rt|se)|prox|psio|pt\-g|qa\-a|qc(07|12|21|32|60|\-[2-7]|i\-)|qtek|r380|r600|raks|rim9|ro(ve|zo)|s55\/|sa(ge|ma|mm|ms|ny|va)|sc(01|h\-|oo|p\-)|sdk\/|se(c(\-|0|1)|47|mc|nd|ri)|sgh\-|shar|sie(\-|m)|sk\-0|sl(45|id)|sm(al|ar|b3|it|t5)|so(ft|ny)|sp(01|h\-|v\-|v )|sy(01|mb)|t2(18|50)|t6(00|10|18)|ta(gt|lk)|tcl\-|tdg\-|tel(i|m)|tim\-|t\-mo|to(pl|sh)|ts(70|m\-|m3|m5)|tx\-9|up(\.b|g1|si)|utst|v400|v750|veri|vi(rg|te)|vk(40|5[0-3]|\-v)|vm40|voda|vulc|vx(52|53|60|61|70|80|81|83|85|98)|w3c(\-| )|webc|whit|wi(g |nc|nw)|wmlb|wonu|x700|yas\-|your|zeto|zte\-/i', substr($user_agent, 0, 4))) {
+            return __('Mobile', 'tutor-lms-advanced-tracking');
+        }
+
+        // Check for tablets
+        if (preg_match('/tablet|ipad|playbook|silk|kindle|hp\s+tablet|tab|gt\-p1000|sm\-t|xoom|sch\-i800|tablet/i', $user_agent)) {
+            return __('Tablet', 'tutor-lms-advanced-tracking');
+        }
+
+        // Default to desktop
+        return __('Desktop', 'tutor-lms-advanced-tracking');
+    }
+
+    /**
+     * Parse user agent to extract browser name
+     */
+    public function parse_browser($user_agent) {
+        if (empty($user_agent)) {
+            return __('Unknown', 'tutor-lms-advanced-tracking');
+        }
+
+        $user_agent = strtolower($user_agent);
+
+        // Check for browsers in order of specificity
+        if (preg_match('/edg\/([0-9.]+)/', $user_agent, $matches)) {
+            return sprintf(__('Edge %s', 'tutor-lms-advanced-tracking'), explode('.', $matches[1])[0]);
+        }
+
+        if (preg_match('/opr\/([0-9.]+)/', $user_agent, $matches)) {
+            return sprintf(__('Opera %s', 'tutor-lms-advanced-tracking'), explode('.', $matches[1])[0]);
+        }
+
+        if (preg_match('/chrome\/([0-9.]+)/', $user_agent, $matches)) {
+            return sprintf(__('Chrome %s', 'tutor-lms-advanced-tracking'), explode('.', $matches[1])[0]);
+        }
+
+        if (preg_match('/firefox\/([0-9.]+)/', $user_agent, $matches)) {
+            return sprintf(__('Firefox %s', 'tutor-lms-advanced-tracking'), explode('.', $matches[1])[0]);
+        }
+
+        if (preg_match('/version\/([0-9.]+).*safari/', $user_agent, $matches)) {
+            // Safari must be checked after Chrome/Firefox to avoid false positives
+            return sprintf(__('Safari %s', 'tutor-lms-advanced-tracking'), explode('.', $matches[1])[0]);
+        }
+
+        if (preg_match('/msie\s+([0-9.]+)/', $user_agent, $matches) || 
+            preg_match('/trident\/.*rv:([0-9.]+)/', $user_agent, $matches)) {
+            return sprintf(__('Internet Explorer %s', 'tutor-lms-advanced-tracking'), explode('.', $matches[1])[0]);
+        }
+
+        // Fallback for less common browsers
+        if (strpos($user_agent, 'bingbot') !== false || strpos($user_agent, 'msnbot') !== false) {
+            return __('Bing Bot', 'tutor-lms-advanced-tracking');
+        }
+
+        if (strpos($user_agent, 'googlebot') !== false) {
+            return __('Google Bot', 'tutor-lms-advanced-tracking');
+        }
+
+        if (strpos($user_agent, 'bot') !== false || strpos($user_agent, 'crawler') !== false) {
+            return __('Bot', 'tutor-lms-advanced-tracking');
+        }
+
+        return __('Other', 'tutor-lms-advanced-tracking');
+    }
+
+    /**
+     * Get device/browser breakdown data with caching
+     * Stores cached data in wp_options for better performance
+     */
+    public function get_device_browser_data($days = 30, $force_refresh = false) {
+        $cache_key = 'tlat_device_browser_data_' . $days;
+
+        // Try to get cached data first (unless force refresh)
+        if (!$force_refresh) {
+            $cached_data = get_transient($cache_key);
+            if ($cached_data !== false) {
+                return $cached_data;
+            }
+        }
+
+        global $wpdb;
+
+        $start_date = date('Y-m-d H:i:s', strtotime("-{$days} days"));
+        $end_date = current_time('mysql');
+
+        // Get all sessions with user agents
+        $sessions = $wpdb->get_results($wpdb->prepare(
+            "SELECT user_agent 
+             FROM {$wpdb->prefix}tlat_login_sessions 
+             WHERE session_start >= %s 
+             AND user_agent IS NOT NULL 
+             AND user_agent != ''",
+            $start_date
+        ));
+
+        // Initialize counters
+        $devices = array(
+            __('Desktop', 'tutor-lms-advanced-tracking') => 0,
+            __('Mobile', 'tutor-lms-advanced-tracking') => 0,
+            __('Tablet', 'tutor-lms-advanced-tracking') => 0,
+            __('Unknown', 'tutor-lms-advanced-tracking') => 0
+        );
+
+        $browsers = array();
+        $device_browser_combinations = array();
+
+        // Parse user agents
+        foreach ($sessions as $session) {
+            $device = $this->parse_device_type($session->user_agent);
+            $browser = $this->parse_browser($session->user_agent);
+
+            // Count devices
+            if (isset($devices[$device])) {
+                $devices[$device]++;
+            } else {
+                $devices[$device] = $devices[__('Unknown', 'tutor-lms-advanced-tracking')] + 1;
+            }
+
+            // Count browsers
+            if (!isset($browsers[$browser])) {
+                $browsers[$browser] = 0;
+            }
+            $browsers[$browser]++;
+
+            // Count combinations
+            $combo_key = $device . ' / ' . $browser;
+            if (!isset($device_browser_combinations[$combo_key])) {
+                $device_browser_combinations[$combo_key] = 0;
+            }
+            $device_browser_combinations[$combo_key]++;
+        }
+
+        // Calculate totals and percentages
+        $total_sessions = count($sessions);
+
+        // Prepare device data with percentages
+        $device_data = array();
+        foreach ($devices as $device_name => $count) {
+            if ($count > 0) {
+                $percentage = round(($count / $total_sessions) * 100, 1);
+                $device_data[] = array(
+                    'label' => $device_name,
+                    'count' => $count,
+                    'percentage' => $percentage
+                );
+            }
+        }
+
+        // Sort devices by count descending
+        usort($device_data, function($a, $b) {
+            return $b['count'] - $a['count'];
+        });
+
+        // Prepare browser data with percentages
+        $browser_data = array();
+        foreach ($browsers as $browser_name => $count) {
+            if ($count > 0) {
+                $percentage = round(($count / $total_sessions) * 100, 1);
+                $browser_data[] = array(
+                    'label' => $browser_name,
+                    'count' => $count,
+                    'percentage' => $percentage
+                );
+            }
+        }
+
+        // Sort browsers by count descending, keep top 8
+        usort($browser_data, function($a, $b) {
+            return $b['count'] - $a['count'];
+        });
+        $browser_data = array_slice($browser_data, 0, 8);
+
+        // Prepare combinations data (top 10)
+        $combinations_data = array();
+        arsort($device_browser_combinations);
+        $combo_count = 0;
+        foreach ($device_browser_combinations as $combo => $count) {
+            if ($combo_count >= 10) break;
+            $percentage = round(($count / $total_sessions) * 100, 1);
+            $combinations_data[] = array(
+                'label' => $combo,
+                'count' => $count,
+                'percentage' => $percentage
+            );
+            $combo_count++;
+        }
+
+        $result = array(
+            'total_sessions' => $total_sessions,
+            'period_days' => $days,
+            'devices' => $device_data,
+            'browsers' => $browser_data,
+            'combinations' => $combinations_data,
+            'generated_at' => current_time('mysql')
+        );
+
+        // Cache the result for 1 hour (cache can be refreshed via AJAX)
+        set_transient($cache_key, $result, 3600);
+
+        return $result;
+    }
+
+    /**
+     * Get device chart data formatted for Chart.js (donut chart)
+     */
+    public function get_device_chart_data($days = 30) {
+        $data = $this->get_device_browser_data($days);
+
+        $labels = array();
+        $counts = array();
+        $percentages = array();
+        $colors = array(
+            '#4285f4', // Desktop - Blue
+            '#ea4335', // Mobile - Red
+            '#34a853', // Tablet - Green
+            '#fbbc04'  // Unknown - Yellow
+        );
+        $background_colors = array();
+
+        foreach ($data['devices'] as $index => $device) {
+            $labels[] = $device['label'] . ' (' . $device['percentage'] . '%)';
+            $counts[] = $device['count'];
+            $percentages[] = $device['percentage'];
+            
+            // Assign color based on device type
+            $device_lower = strtolower($device['label']);
+            if (strpos($device_lower, 'desktop') !== false) {
+                $background_colors[] = $colors[0];
+            } elseif (strpos($device_lower, 'mobile') !== false) {
+                $background_colors[] = $colors[1];
+            } elseif (strpos($device_lower, 'tablet') !== false) {
+                $background_colors[] = $colors[2];
+            } else {
+                $background_colors[] = $colors[3];
+            }
+        }
+
+        return array(
+            'type' => 'doughnut',
+            'title' => __('Device Distribution', 'tutor-lms-advanced-tracking'),
+            'labels' => $labels,
+            'datasets' => array(
+                array(
+                    'label' => __('Sessions', 'tutor-lms-advanced-tracking'),
+                    'data' => $counts,
+                    'backgroundColor' => $background_colors,
+                    'borderWidth' => 2,
+                    'borderColor' => '#ffffff',
+                    'hoverOffset' => 4
+                )
+            ),
+            'raw_data' => $data['devices'],
+            'options' => array(
+                'responsive' => true,
+                'maintainAspectRatio' => false,
+                'cutout' => '60%',
+                'plugins' => array(
+                    'legend' => array(
+                        'position' => 'bottom',
+                        'labels' => array(
+                            'padding' => 15,
+                            'usePointStyle' => true,
+                            'font' => array(
+                                'size' => 11
+                            )
+                        )
+                    ),
+                    'tooltip' => array(
+                        'callbacks' => array(
+                            'label' => "function(context) {
+                                var label = context.label || '';
+                                var value = context.parsed || 0;
+                                var total = context.dataset.data.reduce(function(a, b) { return a + b; }, 0);
+                                var percentage = Math.round((value / total) * 100) + '%';
+                                return label + ': ' + value + ' (' + percentage + ')';
+                            }"
+                        )
+                    )
+                )
+            )
+        );
+    }
+
+    /**
+     * Get browser chart data formatted for Chart.js (donut chart)
+     */
+    public function get_browser_chart_data($days = 30) {
+        $data = $this->get_device_browser_data($days);
+
+        $labels = array();
+        $counts = array();
+        $percentages = array();
+        $colors = array(
+            '#4285f4', '#ea4335', '#34a853', '#fbbc04', '#9c27b0',
+            '#ff5722', '#795548', '#607d8b', '#e91e63', '#00bcd4'
+        );
+        $background_colors = array();
+
+        foreach ($data['browsers'] as $index => $browser) {
+            $labels[] = $browser['label'];
+            $counts[] = $browser['count'];
+            $percentages[] = $browser['percentage'];
+            $background_colors[] = $colors[$index % count($colors)];
+        }
+
+        return array(
+            'type' => 'doughnut',
+            'title' => __('Browser Distribution', 'tutor-lms-advanced-tracking'),
+            'labels' => $labels,
+            'datasets' => array(
+                array(
+                    'label' => __('Sessions', 'tutor-lms-advanced-tracking'),
+                    'data' => $counts,
+                    'backgroundColor' => $background_colors,
+                    'borderWidth' => 2,
+                    'borderColor' => '#ffffff',
+                    'hoverOffset' => 4
+                )
+            ),
+            'raw_data' => $data['browsers'],
+            'options' => array(
+                'responsive' => true,
+                'maintainAspectRatio' => false,
+                'cutout' => '60%',
+                'plugins' => array(
+                    'legend' => array(
+                        'position' => 'bottom',
+                        'labels' => array(
+                            'padding' => 15,
+                            'usePointStyle' => true,
+                            'font' => array(
+                                'size' => 11
+                            )
+                        )
+                    ),
+                    'tooltip' => array(
+                        'callbacks' => array(
+                            'label' => "function(context) {
+                                var label = context.label || '';
+                                var value = context.parsed || 0;
+                                var total = context.dataset.data.reduce(function(a, b) { return a + b; }, 0);
+                                var percentage = Math.round((value / total) * 100) + '%';
+                                return label + ': ' + value + ' (' + percentage + ')';
+                            }"
+                        )
+                    )
+                )
+            )
+        );
+    }
+
+    /**
+     * Render device/browser breakdown section in dashboard
+     */
+    public function render_device_browser_section() {
+        ?>
+        <div class="device-browser-section" style="margin-top: 30px; padding-top: 20px; border-top: 1px solid #e0e0e0;">
+            <h4><?php _e('Device & Browser Breakdown', 'tutor-lms-advanced-tracking'); ?></h4>
+            <p class="description" style="margin-bottom: 15px; color: #666;">
+                <?php _e('Shows the distribution of devices and browsers used by students to access the learning platform.', 'tutor-lms-advanced-tracking'); ?>
+            </p>
+            
+            <div class="device-browser-charts" style="display: flex; gap: 20px; flex-wrap: wrap;">
+                <div class="chart-wrapper-half" style="flex: 1; min-width: 280px; max-width: 400px;">
+                    <h5 style="margin-bottom: 10px; font-size: 14px; color: #555;">
+                        <?php _e('Device Type', 'tutor-lms-advanced-tracking'); ?>
+                    </h5>
+                    <div style="position: relative; height: 220px;">
+                        <canvas id="device-chart" height="200"></canvas>
+                    </div>
+                    <div id="device-legend" class="chart-legend" style="margin-top: 10px;"></div>
+                </div>
+                
+                <div class="chart-wrapper-half" style="flex: 1; min-width: 280px; max-width: 400px;">
+                    <h5 style="margin-bottom: 10px; font-size: 14px; color: #555;">
+                        <?php _e('Browser', 'tutor-lms-advanced-tracking'); ?>
+                    </h5>
+                    <div style="position: relative; height: 220px;">
+                        <canvas id="browser-chart" height="200"></canvas>
+                    </div>
+                    <div id="browser-legend" class="chart-legend" style="margin-top: 10px;"></div>
+                </div>
+            </div>
+            
+            <!-- Summary Table -->
+            <div id="device-browser-summary" style="margin-top: 20px;">
+                <table class="widefat" style="border-collapse: collapse;">
+                    <thead>
+                        <tr style="background: #f5f5f5;">
+                            <th style="padding: 10px; text-align: left; border: 1px solid #e0e0e0;">
+                                <?php _e('Category', 'tutor-lms-advanced-tracking'); ?>
+                            </th>
+                            <th style="padding: 10px; text-align: left; border: 1px solid #e0e0e0;">
+                                <?php _e('Sessions', 'tutor-lms-advanced-tracking'); ?>
+                            </th>
+                            <th style="padding: 10px; text-align: left; border: 1px solid #e0e0e0;">
+                                <?php _e('Percentage', 'tutor-lms-advanced-tracking'); ?>
+                            </th>
+                        </tr>
+                    </thead>
+                    <tbody id="device-browser-tbody">
+                        <tr>
+                            <td colspan="3" style="padding: 20px; text-align: center; border: 1px solid #e0e0e0;">
+                                <span class="spinner is-active" style="float: none; margin: 0 auto;"></span>
+                                <span style="display: block; margin-top: 10px;">
+                                    <?php _e('Loading data...', 'tutor-lms-advanced-tracking'); ?>
+                                </span>
+                            </td>
+                        </tr>
                     </tbody>
                 </table>
             </div>
