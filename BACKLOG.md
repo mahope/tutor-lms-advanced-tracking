@@ -77,7 +77,7 @@
 - [x] Retry/forsøg tracking med score-forbedring
 - [x] Score distribution histogram per quiz
 - [x] Quiz difficulty scoring (automatisk baseret på fail rates)
-- [ ] Question effectiveness metrics (discrimination index)
+- [x] Question effectiveness metrics (discrimination index)
 
 ### Engagement Analytics
 - [ ] Video watch completion rates (kræver video tracking)

@@ -572,6 +572,134 @@ class TutorAdvancedTracking_QuizAnalytics {
     }
 
     /**
+     * Calculate discrimination index for each question in a quiz.
+     *
+     * The discrimination index (DI) measures how well a question differentiates
+     * between high-performing and low-performing students:
+     *   1. Rank students by their overall quiz score (best attempt per user).
+     *   2. Take the top 27% ("upper group") and bottom 27% ("lower group").
+     *   3. DI = (% correct in upper group) - (% correct in lower group).
+     *
+     * Range: -1.0 to +1.0
+     *   > 0.3  = Good discrimination (question works well)
+     *   0.2–0.3 = Acceptable but could be improved
+     *   < 0.2  = Poor discrimination — needs review
+     *   Negative = Inverse discrimination — strong students get it wrong more often
+     *
+     * Requires at least 4 students to produce meaningful results (need ≥2 in each group).
+     *
+     * @param int $quiz_id The quiz post ID.
+     * @return array Associative array of question_id => array with 'di', 'upper_correct_pct', 'lower_correct_pct', 'upper_count', 'lower_count'.
+     */
+    public function get_discrimination_indices($quiz_id) {
+        global $wpdb;
+
+        $attempts_table = $wpdb->prefix . 'tutor_quiz_attempts';
+        $answers_table  = $wpdb->prefix . 'tutor_quiz_attempt_answers';
+
+        // Step 1: Get the best score per user (highest earned_marks / total_marks)
+        $user_scores = $wpdb->get_results($wpdb->prepare(
+            "SELECT user_id, MAX(earned_marks / NULLIF(total_marks, 0)) as best_score,
+                    (SELECT attempt_id FROM {$attempts_table} a2
+                     WHERE a2.quiz_id = %d AND a2.user_id = a1.user_id AND a2.attempt_status = 'attempt_ended'
+                     ORDER BY (a2.earned_marks / NULLIF(a2.total_marks, 0)) DESC LIMIT 1) as best_attempt_id
+            FROM {$attempts_table} a1
+            WHERE quiz_id = %d AND attempt_status = 'attempt_ended'
+            GROUP BY user_id
+            ORDER BY best_score DESC",
+            $quiz_id,
+            $quiz_id
+        ));
+
+        $total_users = count($user_scores);
+
+        // Need at least 4 students for meaningful top/bottom 27% groups
+        if ($total_users < 4) {
+            return array();
+        }
+
+        // Step 2: Split into upper 27% and lower 27%
+        $group_size = max(1, (int) round($total_users * 0.27));
+        $upper_group = array_slice($user_scores, 0, $group_size);
+        $lower_group = array_slice($user_scores, $total_users - $group_size);
+
+        $upper_attempt_ids = array_map(function($u) { return (int) $u->best_attempt_id; }, $upper_group);
+        $lower_attempt_ids = array_map(function($u) { return (int) $u->best_attempt_id; }, $lower_group);
+
+        // Filter out any null attempt IDs
+        $upper_attempt_ids = array_filter($upper_attempt_ids);
+        $lower_attempt_ids = array_filter($lower_attempt_ids);
+
+        if (empty($upper_attempt_ids) || empty($lower_attempt_ids)) {
+            return array();
+        }
+
+        // Step 3: Get all questions for this quiz
+        $questions = $wpdb->get_col($wpdb->prepare(
+            "SELECT question_id FROM {$wpdb->prefix}tutor_quiz_questions WHERE quiz_id = %d",
+            $quiz_id
+        ));
+
+        if (empty($questions)) {
+            return array();
+        }
+
+        // Step 4: For each question, compute correct rate in upper and lower groups
+        $results = array();
+
+        // Build placeholders for IN clauses
+        $upper_placeholders = implode(',', array_fill(0, count($upper_attempt_ids), '%d'));
+        $lower_placeholders = implode(',', array_fill(0, count($lower_attempt_ids), '%d'));
+
+        foreach ($questions as $question_id) {
+            $question_id = (int) $question_id;
+
+            // Upper group correct count
+            $upper_params = array_merge(array($question_id), $upper_attempt_ids);
+            $upper_correct = (int) $wpdb->get_var($wpdb->prepare(
+                "SELECT COUNT(*) FROM {$answers_table}
+                WHERE question_id = %d AND quiz_attempt_id IN ({$upper_placeholders}) AND is_correct = 1",
+                $upper_params
+            ));
+
+            $upper_total = (int) $wpdb->get_var($wpdb->prepare(
+                "SELECT COUNT(*) FROM {$answers_table}
+                WHERE question_id = %d AND quiz_attempt_id IN ({$upper_placeholders})",
+                $upper_params
+            ));
+
+            // Lower group correct count
+            $lower_params = array_merge(array($question_id), $lower_attempt_ids);
+            $lower_correct = (int) $wpdb->get_var($wpdb->prepare(
+                "SELECT COUNT(*) FROM {$answers_table}
+                WHERE question_id = %d AND quiz_attempt_id IN ({$lower_placeholders}) AND is_correct = 1",
+                $lower_params
+            ));
+
+            $lower_total = (int) $wpdb->get_var($wpdb->prepare(
+                "SELECT COUNT(*) FROM {$answers_table}
+                WHERE question_id = %d AND quiz_attempt_id IN ({$lower_placeholders})",
+                $lower_params
+            ));
+
+            $upper_pct = $upper_total > 0 ? $upper_correct / $upper_total : 0;
+            $lower_pct = $lower_total > 0 ? $lower_correct / $lower_total : 0;
+
+            $di = round($upper_pct - $lower_pct, 2);
+
+            $results[$question_id] = array(
+                'di'                => $di,
+                'upper_correct_pct' => round($upper_pct * 100, 1),
+                'lower_correct_pct' => round($lower_pct * 100, 1),
+                'upper_count'       => count($upper_attempt_ids),
+                'lower_count'       => count($lower_attempt_ids),
+            );
+        }
+
+        return $results;
+    }
+
+    /**
      * Render quizzes page
      */
     public function render_quizzes_page() {
@@ -843,6 +971,7 @@ class TutorAdvancedTracking_QuizAnalytics {
         $heatmap = $this->get_answer_pattern_heatmap($quiz_id);
         $wrong_answers = $this->get_wrong_answer_analysis($quiz_id);
         $time_data = $this->get_time_per_question($quiz_id);
+        $discrimination = $this->get_discrimination_indices($quiz_id);
         
         ob_start();
         ?>
@@ -909,6 +1038,11 @@ class TutorAdvancedTracking_QuizAnalytics {
                                     <th style="width: 80px;"><?php _e('Type', 'tutor-lms-advanced-tracking'); ?></th>
                                     <th style="width: 100px;"><?php _e('Correct %', 'tutor-lms-advanced-tracking'); ?></th>
                                     <th style="width: 100px;"><?php _e('Difficulty', 'tutor-lms-advanced-tracking'); ?></th>
+                                    <th style="width: 140px;">
+                                        <span style="cursor: help; border-bottom: 1px dashed #9ca3af;" title="<?php esc_attr_e('Discrimination Index (DI) measures how well a question differentiates between high and low performers. DI = (% correct in top 27%) - (% correct in bottom 27%). Range: -1.0 to +1.0. Good: >0.3, Acceptable: 0.2-0.3, Poor: <0.2', 'tutor-lms-advanced-tracking'); ?>">
+                                            <?php _e('Discrimination', 'tutor-lms-advanced-tracking'); ?> <span style="font-size: 10px;">&#9432;</span>
+                                        </span>
+                                    </th>
                                 </tr>
                             </thead>
                             <tbody>
@@ -929,7 +1063,7 @@ class TutorAdvancedTracking_QuizAnalytics {
                                         </div>
                                     </td>
                                     <td>
-                                        <?php 
+                                        <?php
                                         $diff = $q['difficulty_index'];
                                         $diff_label = $diff > 0.7 ? __('Easy', 'tutor-lms-advanced-tracking') : ($diff > 0.4 ? __('Medium', 'tutor-lms-advanced-tracking') : __('Hard', 'tutor-lms-advanced-tracking'));
                                         $diff_color = $diff > 0.7 ? '#10b981' : ($diff > 0.4 ? '#f59e0b' : '#ef4444');
@@ -937,6 +1071,48 @@ class TutorAdvancedTracking_QuizAnalytics {
                                         <span style="color: <?php echo esc_attr($diff_color); ?>; font-size: 12px; font-weight: 500;">
                                             <?php echo esc_html($diff_label); ?>
                                         </span>
+                                    </td>
+                                    <td>
+                                        <?php
+                                        $q_id = $q['id'];
+                                        if (isset($discrimination[$q_id])) {
+                                            $di_data = $discrimination[$q_id];
+                                            $di_val = $di_data['di'];
+
+                                            // Color coding: green >0.3, yellow 0.2-0.3, red <0.2
+                                            if ($di_val > 0.3) {
+                                                $di_color = '#10b981';
+                                                $di_bg = '#d1fae5';
+                                            } elseif ($di_val >= 0.2) {
+                                                $di_color = '#d97706';
+                                                $di_bg = '#fef3c7';
+                                            } else {
+                                                $di_color = '#ef4444';
+                                                $di_bg = '#fef2f2';
+                                            }
+
+                                            $tooltip = sprintf(
+                                                __('Top 27%%: %s%% correct | Bottom 27%%: %s%% correct | Groups: %d students each', 'tutor-lms-advanced-tracking'),
+                                                $di_data['upper_correct_pct'],
+                                                $di_data['lower_correct_pct'],
+                                                $di_data['upper_count']
+                                            );
+                                        ?>
+                                            <div style="display: flex; align-items: center; gap: 6px; flex-wrap: wrap;">
+                                                <span style="display: inline-block; background: <?php echo esc_attr($di_bg); ?>; color: <?php echo esc_attr($di_color); ?>; padding: 2px 8px; border-radius: 10px; font-size: 12px; font-weight: 600; cursor: help;" title="<?php echo esc_attr($tooltip); ?>">
+                                                    <?php echo esc_html(number_format($di_val, 2)); ?>
+                                                </span>
+                                                <?php if ($di_val < 0.2): ?>
+                                                <span style="display: inline-block; background: #fef2f2; color: #dc2626; padding: 1px 6px; border-radius: 8px; font-size: 10px; font-weight: 600; border: 1px solid #fecaca;">
+                                                    <?php _e('Needs Review', 'tutor-lms-advanced-tracking'); ?>
+                                                </span>
+                                                <?php endif; ?>
+                                            </div>
+                                        <?php } else { ?>
+                                            <span style="font-size: 11px; color: #9ca3af;" title="<?php esc_attr_e('Not enough students (minimum 4 required) to calculate discrimination index', 'tutor-lms-advanced-tracking'); ?>">
+                                                <?php _e('N/A', 'tutor-lms-advanced-tracking'); ?>
+                                            </span>
+                                        <?php } ?>
                                     </td>
                                 </tr>
                                 <?php endforeach; ?>
