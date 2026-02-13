@@ -20,6 +20,7 @@ class TutorAdvancedTracking_Engagement {
         
         // AJAX handlers for engagement data
         add_action('wp_ajax_tutor_advanced_engagement_data', array($this, 'handle_engagement_data_ajax'));
+        add_action('wp_ajax_tutor_advanced_heatmap_data', array($this, 'handle_heatmap_data_ajax'));
         
         // Add dashboard section
         add_action('tutor_advanced_tracking_dashboard_stats', array($this, 'render_engagement_dashboard'), 20);
@@ -1190,6 +1191,327 @@ class TutorAdvancedTracking_Engagement {
                         </tr>
                     </tbody>
                 </table>
+            </div>
+        </div>
+        <?php
+    }
+
+    /**
+     * Handle AJAX requests for heatmap data
+     */
+    public function handle_heatmap_data_ajax() {
+        if (!wp_verify_nonce($_POST['nonce'] ?? '', 'tutor_advanced_heatmap_' . get_current_user_id())) {
+            wp_send_json_error(__('Security check failed', 'tutor-lms-advanced-tracking'));
+        }
+        
+        if (!current_user_can('manage_options') && !current_user_can('tutor_instructor')) {
+            wp_send_json_error(__('Insufficient permissions', 'tutor-lms-advanced-tracking'));
+        }
+        
+        $days = intval($_POST['days'] ?? 30);
+        $course_id = intval($_POST['course_id'] ?? 0);
+        
+        $data = $this->get_peak_activity_heatmap_data($days, $course_id);
+        
+        wp_send_json_success($data);
+    }
+
+    /**
+     * Get peak activity hours heatmap data
+     * Aggregates login session data by hour of day + day of week
+     */
+    public function get_peak_activity_heatmap_data($days = 30, $course_id = 0) {
+        global $wpdb;
+        
+        $start_date = date('Y-m-d H:i:s', strtotime("-{$days} days"));
+        $end_date = current_time('mysql');
+        
+        // Build course filter if specified
+        $course_join = '';
+        $course_where = '';
+        
+        if ($course_id > 0) {
+            // Join with enrollments to filter by course
+            $course_join = "JOIN {$wpdb->prefix}tutor_enrollments e ON s.user_id = e.user_id";
+            $course_where = $wpdb->prepare("AND e.course_id = %d", $course_id);
+        }
+        
+        // Get activity data grouped by hour of day and day of week
+        $data = $wpdb->get_results($wpdb->prepare(
+            "SELECT 
+                DAYOFWEEK(s.session_start) as day_num,
+                HOUR(s.session_start) as hour_num,
+                COUNT(DISTINCT s.user_id) as unique_users,
+                COUNT(*) as total_sessions
+             FROM {$wpdb->prefix}tlat_login_sessions s
+             {$course_join}
+             WHERE s.session_start BETWEEN %s AND %s
+             {$course_where}
+             GROUP BY day_num, hour_num
+             ORDER BY day_num, hour_num",
+            $start_date, $end_date
+        ));
+        
+        // Initialize matrix (7 days x 24 hours)
+        $matrix = array();
+        $max_activity = 0;
+        $total_activities = 0;
+        
+        for ($day = 1; $day <= 7; $day++) {
+            for ($hour = 0; $hour < 24; $hour++) {
+                $matrix[$day][$hour] = 0;
+            }
+        }
+        
+        // Fill matrix with data
+        foreach ($data as $row) {
+            $day = intval($row->day_num);
+            $hour = intval($row->hour_num);
+            $activity = intval($row->unique_users);
+            
+            $matrix[$day][$hour] = $activity;
+            $max_activity = max($max_activity, $activity);
+            $total_activities += $activity;
+        }
+        
+        // Prepare data for Chart.js matrix chart
+        $chart_data = array();
+        $days_short = array('Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat');
+        
+        for ($day = 1; $day <= 7; $day++) {
+            for ($hour = 0; $hour < 24; $hour++) {
+                $value = $matrix[$day][$hour];
+                $chart_data[] = array(
+                    'x' => $hour,
+                    'y' => $day - 1, // 0-indexed for chart
+                    'v' => $value,
+                    'd' => $days_short[$day - 1],
+                    'h' => sprintf('%02d:00', $hour)
+                );
+            }
+        }
+        
+        // Calculate peak hours
+        $hour_totals = array();
+        for ($hour = 0; $hour < 24; $hour++) {
+            $total = 0;
+            for ($day = 1; $day <= 7; $day++) {
+                $total += $matrix[$day][$hour];
+            }
+            $hour_totals[$hour] = $total;
+        }
+        
+        // Find peak day and hour
+        $peak_day = 1;
+        $peak_hour = 0;
+        $peak_value = 0;
+        
+        for ($day = 1; $day <= 7; $day++) {
+            for ($hour = 0; $hour < 24; $hour++) {
+                if ($matrix[$day][$hour] > $peak_value) {
+                    $peak_value = $matrix[$day][$hour];
+                    $peak_day = $day;
+                    $peak_hour = $hour;
+                }
+            }
+        }
+        
+        // Calculate average activities per cell
+        $non_zero_cells = 0;
+        foreach ($chart_data as $cell) {
+            if ($cell['v'] > 0) {
+                $non_zero_cells++;
+            }
+        }
+        $avg_activity = $non_zero_cells > 0 ? round($total_activities / $non_zero_cells, 1) : 0;
+        
+        return array(
+            'type' => 'matrix',
+            'title' => __('Peak Activity Hours Heatmap', 'tutor-lms-advanced-tracking'),
+            'description' => __('Shows student activity patterns by hour of day and day of week. Darker colors indicate higher activity.', 'tutor-lms-advanced-tracking'),
+            'labels' => array(
+                'x' => array(
+                    'title' => __('Hour of Day', 'tutor-lms-advanced-tracking'),
+                    'ticks' => array_map(function($h) {
+                        return sprintf('%02d:00', $h);
+                    }, range(0, 23))
+                ),
+                'y' => array(
+                    'title' => __('Day of Week', 'tutor-lms-advanced-tracking'),
+                    'ticks' => $days_short
+                )
+            ),
+            'data' => $chart_data,
+            'max_value' => $max_activity,
+            'total_activities' => $total_activities,
+            'period_days' => $days,
+            'summary' => array(
+                'peak_day' => $days_short[$peak_day - 1],
+                'peak_hour' => sprintf('%02d:00', $peak_hour),
+                'peak_value' => $peak_value,
+                'average_per_cell' => $avg_activity,
+                'total_unique_users' => count(array_unique(array_column($data, 'user_id')))
+            ),
+            'options' => array(
+                'responsive' => true,
+                'maintainAspectRatio' => false,
+                'plugins' => array(
+                    'legend' => array(
+                        'display' => false
+                    ),
+                    'tooltip' => array(
+                        'callbacks' => "function(context) {
+                            var data = context.raw;
+                            if (!data) return '';
+                            return data.d + ' ' + data.h + ': ' + data.v + ' active users';
+                        }"
+                    )
+                ),
+                'scales' => array(
+                    'x' => array(
+                        'type' => 'linear',
+                        'min' => -0.5,
+                        'max' => 23.5,
+                        'offset' => false,
+                        'grid' => array(
+                            'display' => false
+                        ),
+                        'ticks' => array(
+                            'stepSize' => 3,
+                            'callback' => "function(value) {
+                                return (value < 10 ? '0' : '') + value + ':00';
+                            }"
+                        ),
+                        'title' => array(
+                            'display' => true,
+                            'text' => 'Hour of Day'
+                        )
+                    ),
+                    'y' => array(
+                        'type' => 'linear',
+                        'min' => -0.5,
+                        'max' => 6.5,
+                        'offset' => false,
+                        'grid' => array(
+                            'display' => false
+                        ),
+                        'ticks' => array(
+                            'stepSize' => 1,
+                            'callback' => "function(value) {
+                                var days = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+                                return days[value] || '';
+                            }"
+                        ),
+                        'title' => array(
+                            'display' => true,
+                            'text' => 'Day of Week'
+                        )
+                    )
+                )
+            )
+        );
+    }
+
+    /**
+     * Get list of courses for dropdown filter
+     */
+    public function get_courses_list() {
+        global $wpdb;
+        
+        $courses = $wpdb->get_results(
+            "SELECT ID as id, post_title as name 
+             FROM {$wpdb->posts} 
+             WHERE post_type = 'courses' 
+             AND post_status = 'publish'
+             ORDER BY post_title ASC"
+        );
+        
+        return $courses;
+    }
+
+    /**
+     * Render peak activity hours heatmap section in dashboard
+     */
+    public function render_peak_activity_heatmap() {
+        $courses = $this->get_courses_list();
+        ?>
+        <div class="peak-activity-heatmap-section" style="margin-top: 30px; padding-top: 20px; border-top: 1px solid #e0e0e0;">
+            <div class="section-header" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; flex-wrap: wrap; gap: 15px;">
+                <div>
+                    <h4 style="margin: 0 0 5px 0; font-size: 16px; color: #23282d;">
+                        <?php _e('Peak Activity Hours Heatmap', 'tutor-lms-advanced-tracking'); ?>
+                    </h4>
+                    <p style="margin: 0; color: #666; font-size: 13px;">
+                        <?php _e('Visualize when students are most active throughout the week.', 'tutor-lms-advanced-tracking'); ?>
+                    </p>
+                </div>
+                <div class="heatmap-controls" style="display: flex; gap: 10px; flex-wrap: wrap;">
+                    <?php if (!empty($courses)) : ?>
+                    <select id="heatmap-course-filter" class="heatmap-select" style="min-width: 200px;">
+                        <option value="0"><?php _e('All Courses', 'tutor-lms-advanced-tracking'); ?></option>
+                        <?php foreach ($courses as $course) : ?>
+                            <option value="<?php echo intval($course->id); ?>">
+                                <?php echo esc_html($course->name); ?>
+                            </option>
+                        <?php endforeach; ?>
+                    </select>
+                    <?php endif; ?>
+                    <select id="heatmap-date-range" class="heatmap-select">
+                        <option value="7"><?php _e('Last 7 Days', 'tutor-lms-advanced-tracking'); ?></option>
+                        <option value="14"><?php _e('Last 14 Days', 'tutor-lms-advanced-tracking'); ?></option>
+                        <option value="30" selected><?php _e('Last 30 Days', 'tutor-lms-advanced-tracking'); ?></option>
+                        <option value="60"><?php _e('Last 60 Days', 'tutor-lms-advanced-tracking'); ?></option>
+                        <option value="90"><?php _e('Last 90 Days', 'tutor-lms-advanced-tracking'); ?></option>
+                    </select>
+                </div>
+            </div>
+            
+            <!-- Heatmap Canvas Container -->
+            <div class="heatmap-container" style="background: #fff; padding: 20px; border-radius: 8px; box-shadow: 0 1px 3px rgba(0,0,0,0.1);">
+                <div style="position: relative; height: 320px;">
+                    <canvas id="peak-activity-heatmap" height="300"></canvas>
+                </div>
+                
+                <!-- Loading State -->
+                <div id="heatmap-loading" class="heatmap-loading" style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); text-align: center; display: none;">
+                    <span class="spinner is-active" style="float: none; margin: 0 auto;"></span>
+                    <p style="margin-top: 10px; color: #666;"><?php _e('Loading heatmap data...', 'tutor-lms-advanced-tracking'); ?></p>
+                </div>
+                
+                <!-- Empty State -->
+                <div id="heatmap-empty" class="heatmap-empty" style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); text-align: center; display: none;">
+                    <div style="font-size: 48px; margin-bottom: 10px;">📊</div>
+                    <p style="color: #666;"><?php _e('No activity data available yet.', 'tutor-lms-advanced-tracking'); ?></p>
+                    <p style="color: #999; font-size: 13px;"><?php _e('Activity data will appear once students start logging in.', 'tutor-lms-advanced-tracking'); ?></p>
+                </div>
+            </div>
+            
+            <!-- Legend and Summary -->
+            <div class="heatmap-summary" style="margin-top: 20px; display: flex; justify-content: space-between; align-items: flex-start; flex-wrap: wrap; gap: 20px;">
+                <!-- Color Legend -->
+                <div class="heatmap-legend" style="display: flex; align-items: center; gap: 10px;">
+                    <span style="font-size: 12px; color: #666;"><?php _e('Activity Level:', 'tutor-lms-advanced-tracking'); ?></span>
+                    <div style="display: flex; align-items: center;">
+                        <div style="width: 120px; height: 16px; background: linear-gradient(to right, #f0f9ff, #0284c7); border-radius: 3px;"></div>
+                    </div>
+                    <span style="font-size: 11px; color: #999;"><?php _e('Low → High', 'tutor-lms-advanced-tracking'); ?></span>
+                </div>
+                
+                <!-- Stats Cards -->
+                <div class="heatmap-stats" style="display: flex; gap: 20px; flex-wrap: wrap;">
+                    <div class="stat-item" style="text-align: center; min-width: 100px;">
+                        <div class="stat-value" id="heatmap-peak-value" style="font-size: 20px; font-weight: 600; color: #23282d;">-</div>
+                        <div class="stat-label" style="font-size: 11px; color: #666;"><?php _e('Peak Activity', 'tutor-lms-advanced-tracking'); ?></div>
+                    </div>
+                    <div class="stat-item" style="text-align: center; min-width: 100px;">
+                        <div class="stat-value" id="heatmap-avg-value" style="font-size: 20px; font-weight: 600; color: #23282d;">-</div>
+                        <div class="stat-label" style="font-size: 11px; color: #666;"><?php _e('Avg per Cell', 'tutor-lms-advanced-tracking'); ?></div>
+                    </div>
+                    <div class="stat-item" style="text-align: center; min-width: 100px;">
+                        <div class="stat-value" id="heatmap-peak-time" style="font-size: 20px; font-weight: 600; color: #23282d;">-</div>
+                        <div class="stat-label" style="font-size: 11px; color: #666;"><?php _e('Peak Time', 'tutor-lms-advanced-tracking'); ?></div>
+                    </div>
+                </div>
             </div>
         </div>
         <?php

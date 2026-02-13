@@ -139,6 +139,38 @@ $overview = $engagement->get_engagement_overview();
             </div>
         </div>
     </div>
+
+    <!-- Peak Activity Hours Heatmap -->
+    <div class="tutor-admin-card">
+        <h3>
+            <span class="dashicons dashicons-grid-view"></span>
+            <?php _e('Peak Activity Hours Heatmap', 'tutor-lms-advanced-tracking'); ?>
+        </h3>
+        <div class="card-content">
+            <?php
+            // Enqueue Chart.js with matrix plugin support
+            wp_enqueue_script(
+                'chartjs',
+                'https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js',
+                array(),
+                '4.4.0',
+                true
+            );
+            
+            wp_enqueue_script(
+                'chartjs-chart-matrix',
+                TUTOR_ADVANCED_TRACKING_PLUGIN_URL . 'assets/js/chartjs-chart-matrix.min.js',
+                array('chartjs'),
+                '2.0.1',
+                true
+            );
+            
+            // Render the heatmap section
+            $engagement->render_peak_activity_heatmap();
+            ?>
+        </div>
+    </div>
+
 </div>
 
 <style>

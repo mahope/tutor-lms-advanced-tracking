@@ -248,3 +248,131 @@
         padding: 8px 10px;
     }
 }
+
+/* Peak Activity Heatmap Styles */
+.peak-activity-heatmap-section .heatmap-container {
+    position: relative;
+    min-height: 350px;
+}
+
+.peak-activity-heatmap-section .heatmap-container canvas {
+    max-height: 320px;
+}
+
+.peak-activity-heatmap-section .heatmap-loading,
+.peak-activity-heatmap-section .heatmap-empty {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    text-align: center;
+}
+
+.peak-activity-heatmap-section .heatmap-loading {
+    display: none;
+}
+
+.peak-activity-heatmap-section .heatmap-loading.show {
+    display: block;
+}
+
+.peak-activity-heatmap-section .heatmap-empty {
+    display: none;
+}
+
+.peak-activity-heatmap-section .heatmap-empty.show {
+    display: block;
+}
+
+.peak-activity-heatmap-section .heatmap-empty .empty-icon {
+    font-size: 48px;
+    margin-bottom: 10px;
+}
+
+.peak-activity-heatmap-section .heatmap-empty p {
+    color: #646970;
+    margin: 5px 0;
+}
+
+.peak-activity-heatmap-section .heatmap-empty p.hint {
+    color: #999;
+    font-size: 13px;
+}
+
+.peak-activity-heatmap-section .heatmap-controls {
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+}
+
+.peak-activity-heatmap-section .heatmap-select {
+    padding: 6px 12px;
+    border: 1px solid #c3c4c7;
+    border-radius: 4px;
+    background: #fff;
+    font-size: 14px;
+    color: #1d2327;
+    min-width: 150px;
+}
+
+.peak-activity-heatmap-section .heatmap-select:focus {
+    outline: none;
+    border-color: #2271b1;
+    box-shadow: 0 0 0 1px #2271b1;
+}
+
+.peak-activity-heatmap-section .heatmap-legend {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.peak-activity-heatmap-section .heatmap-legend-label {
+    font-size: 12px;
+    color: #666;
+}
+
+.peak-activity-heatmap-section .heatmap-legend-scale {
+    display: flex;
+    align-items: center;
+}
+
+.peak-activity-heatmap-section .heatmap-legend-gradient {
+    width: 120px;
+    height: 16px;
+    background: linear-gradient(to right, #f0f9ff, #0284c7);
+    border-radius: 3px;
+}
+
+.peak-activity-heatmap-section .heatmap-legend-labels {
+    display: flex;
+    justify-content: space-between;
+    width: 120px;
+    font-size: 10px;
+    color: #999;
+    margin-top: 2px;
+}
+
+.peak-activity-heatmap-section .heatmap-stats {
+    display: flex;
+    gap: 20px;
+    flex-wrap: wrap;
+}
+
+.peak-activity-heatmap-section .heatmap-stat {
+    text-align: center;
+    min-width: 100px;
+}
+
+.peak-activity-heatmap-section .heatmap-stat-value {
+    font-size: 20px;
+    font-weight: 600;
+    color: #23282d;
+    line-height: 1.2;
+}
+
+.peak-activity-heatmap-section .heatmap-stat-label {
+    font-size: 11px;
+    color: #666;
+    margin-top: 2px;
+}
