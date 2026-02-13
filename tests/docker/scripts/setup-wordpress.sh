@@ -6,11 +6,23 @@ set -e
 
 echo "🚀 Setting up WordPress for TLAT testing..."
 
-# Wait for database
+# Wait for database (wp-cli uses WordPress connection)
 echo "⏳ Waiting for database..."
-until wp db check --allow-root 2>/dev/null; do
-    sleep 2
+# Wait for WordPress to have established DB connection
+RETRIES=30
+while [ $RETRIES -gt 0 ]; do
+    if wp option get blogname --allow-root 2>/dev/null; then
+        echo "✅ Database connection established"
+        break
+    fi
+    echo "  Waiting for WordPress database connection..."
+    RETRIES=$((RETRIES - 1))
+    sleep 3
 done
+
+if [ $RETRIES -eq 0 ]; then
+    echo "⚠️ Could not verify database via wp option, continuing anyway..."
+fi
 
 # Check if already installed
 if wp core is-installed --allow-root 2>/dev/null; then
