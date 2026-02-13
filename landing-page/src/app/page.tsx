@@ -304,7 +304,7 @@ export default function Home() {
                 </li>
               </ul>
               <a 
-                href="https://buy.stripe.com/XXXXXX" 
+                href="https://buy.stripe.com/dRmaEX2kJ016dGD2yi57W01" 
                 className="block w-full bg-indigo-500 hover:bg-indigo-600 text-white text-center py-4 rounded-xl font-semibold transition"
               >
                 Get Lifetime Access
@@ -346,7 +346,7 @@ export default function Home() {
                 </li>
               </ul>
               <a 
-                href="https://buy.stripe.com/YYYYYY" 
+                href="https://buy.stripe.com/9B6bJ1f7vcNS9qn6Oy57W02" 
                 className="block w-full border-2 border-gray-200 hover:border-indigo-500 text-gray-700 hover:text-indigo-600 text-center py-4 rounded-xl font-semibold transition"
               >
                 Start Annual Plan
