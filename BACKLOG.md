@@ -72,7 +72,7 @@
 
 ### Quiz & Assessment Analytics
 - [x] Per-question analytics (hvilke spørgsmål er sværest)
-- [ ] Answer pattern heatmap (hvad svarer folk forkert)
+- [x] Answer pattern heatmap (hvad svarer folk forkert)
 - [ ] Time spent per question tracking
 - [x] Retry/forsøg tracking med score-forbedring
 - [x] Score distribution histogram per quiz
