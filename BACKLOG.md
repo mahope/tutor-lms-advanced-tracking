@@ -1,7 +1,7 @@
 # Tutor LMS Advanced Tracking — Backlog
 
 > **Produkt:** WordPress plugin til avanceret kursus-analytics for Tutor LMS
-> **Revenue model:** LTD $99/€99, Årlig licens $15/€15
+> **Revenue model:** LTD €99, Årlig licens €15
 > **Target:** Tutor LMS brugere der vil have bedre insights
 
 ---
@@ -12,6 +12,7 @@
 - Ingen "skjulte" features — brugeren skal kunne finde og bruge det
 - Test at UI er responsiv og intuitiv
 
+---
 
 ## ✅ Completed
 
@@ -33,120 +34,186 @@
 - [x] SQLite database med WAL mode
 - [x] Integrer med class-license-validator.php
 
----
+### Phase 1: Launch Ready
+- [x] Deploy licensserver til Dokploy (licenses.holstjensen.eu)
+- [x] HTTPS med Let's Encrypt
+- [x] Rate limiting + monitoring + backup
+- [x] Admin UI licensindstillinger
+- [x] 14-dages grace period
+- [x] Loading states på alle charts
+- [x] Auto-update system
+- [x] PHPUnit tests + Docker test infrastructure
+- [x] WordPress 6.4/6.5/6.6 kompatibilitet
+- [x] Tutor LMS Free 3.9.6 kompatibilitet
 
-## 🎯 UI/UX Princip
-**Alle features SKAL være synlige og tilgængelige for brugeren!**
-- Backend-funktionalitet → tilføj også UI (knap, menu, side)
-- Ingen "skjulte" features — brugeren skal kunne finde og bruge det
-- Test at UI er responsiv og intuitiv
-
-
-## 🚀 Phase 1: Launch Ready (Prioritet 1)
-
-### Licensserver Deployment
-- [x] Deploy tlat-license-server til Dokploy — deployed til licenses.holstjensen.eu (Dokploy, auto-deploy fra GitHub)
-- [x] Sæt op HTTPS med Let's Encrypt — certificateType: letsencrypt, verified working
-- [x] Tilføj rate limiting (express-rate-limit)
-- [x] Monitoring: uptime check + error alerts (healthcheck.sh + docs/monitoring.md)
-- [x] Backup cron for SQLite database (backup-db.sh + retention + offsite docs)
-
-### Plugin Polish
-- [x] Admin UI: Licensindstillinger side (Settings → TLAT License)
-- [x] License aktiverings-flow i admin (enter key → validate → activate)
-- [x] Graceful degradation når licens udløber (14-dages grace period)
-- [x] Loading states på alle dashboard charts
-- [x] Responsive fixes til admin UI på tablet
-
-### Auto-Update System
-- [x] Update-server endpoint på licensserveren (/api/v1/update/check)
-- [x] JSON manifest med version, changelog, download URL
-- [x] Implementer update checker i plugin (pre_set_site_transient_update_plugins)
-- [x] Signed zip downloads (hash verification)
-
-### Testing
-- [x] Unit tests for license validator (PHPUnit)
-- [x] Integration test: aktivering → deaktivering → reaktivering
-- [x] Docker-based test infrastructure (`make test-up`, `./scripts/test-wp-compat.sh`)
-- [x] Test på WordPress 6.6 + PHP 8.3 — passed, all syntax clean (fixed critical `$this` bug in line 230)
-- [x] Test på WordPress 6.4, 6.5 — All 35 PHP files pass syntax check (WP 6.4.3 + 6.5.5 + PHP 8.3.30)
-- [x] Test med Tutor LMS Free + Pro — Tutor Free 3.9.6 tested on WP 6.6.2 + PHP 8.2; Pro requires manual test (licensed). See docs/TUTOR-COMPATIBILITY.md
+### Phase 2: Launch & Marketing
+- [x] Landing page (Next.js, Dockerfile ready)
+- [x] Stripe checkout (LTD €99 + Annual €15)
+- [x] License delivery email (Resend)
+- [x] Customer portal med magic link
+- [x] Feature comparison table
+- [x] Plausible analytics + event tracking
+- [x] License activation tracking
+- [x] Webhooks til Zapier/Make
 
 ---
 
-## 🎯 UI/UX Princip
-**Alle features SKAL være synlige og tilgængelige for brugeren!**
-- Backend-funktionalitet → tilføj også UI (knap, menu, side)
-- Ingen "skjulte" features — brugeren skal kunne finde og bruge det
-- Test at UI er responsiv og intuitiv
+## 🚀 Phase 2.5: Analytics Deep Dive (Prioritet 1)
 
+> **Mål:** Gør pluginnet til den mest dybdegående analytics-løsning for Tutor LMS
 
-## 📈 Phase 2: Launch & Marketing (Prioritet 2)
+### Student Progress Analytics
+- [ ] Individual student progress dashboard (`Tutor Stats → Students → [Student]`)
+- [ ] Time spent tracking per lesson og kursus (track start/end timestamps)
+- [ ] Engagement score beregning (baseret på aktivitet, quiz scores, completion)
+- [ ] At-risk student identificering (ingen aktivitet i X dage, lav progression)
+- [ ] Student timeline view (kronologisk aktivitetslog per elev)
+- [ ] Student sammenligning (sammenlign flere elevers progression)
 
-### Sales Infrastructure
-- [x] Landing page på tutor-tracking.com (Next.js eller WordPress) — `landing-page/` folder, Next.js 15 + Tailwind v4, Dockerfile ready. Deploy til Dokploy og opdater Stripe checkout links.
-- [x] Stripe checkout integration (LTD + Annual options) — Payment Links created: LTD €99 + Annual €15/yr, redirects to license server success page
-- [x] License delivery email (SendGrid/Resend) — Resend API integrated in license server
-- [x] Customer portal: se licenser, download, support — `/portal` page med magic link auth, license dashboard, download links, support links
+### Quiz & Assessment Analytics
+- [ ] Per-question analytics (hvilke spørgsmål er sværest)
+- [ ] Answer pattern heatmap (hvad svarer folk forkert)
+- [ ] Time spent per question tracking
+- [ ] Retry/forsøg tracking med score-forbedring
+- [ ] Score distribution histogram per quiz
+- [ ] Quiz difficulty scoring (automatisk baseret på fail rates)
+- [ ] Question effectiveness metrics (discrimination index)
 
-### Marketing Assets
-- [ ] Screenshots til docs/screenshots/ (min 5 forskellige views)
-- [ ] 2-min demo video (screen recording + voiceover)
-- [x] Feature comparison table (TLAT vs native Tutor LMS) — added to landing page with 9 feature comparisons
-- [x] Pricing page med FAQ — integrated in landing page (id="pricing" + id="faq" sections)
+### Engagement Analytics
+- [ ] Video watch completion rates (kræver video tracking)
+- [ ] Assignment submission timeline
+- [ ] Login frequency og session-længde
+- [ ] Device/browser breakdown chart
+- [ ] Peak activity hours heatmap
+- [ ] Content engagement score per lesson
+- [ ] Lesson drop-off points (hvor stopper folk?)
 
-### Launch Outreach
+### Real-time Dashboard
+- [ ] Live student activity feed (hvem gør hvad nu)
+- [ ] Current active users count + chart
+- [ ] Real-time enrollment notifications
+- [ ] Live completion alerts
+- [ ] WebSocket eller Server-Sent Events integration
+
+### Custom Reports
+- [ ] Custom date range selector på alle dashboards
+- [ ] PDF report generation med branding
+- [ ] Scheduled email reports (daglig/ugentlig/månedlig)
+- [ ] Report templates (executive summary, detailed, instructor)
+- [ ] Excel export med formatering
+- [ ] Report scheduling UI i admin
+
+---
+
+## 📊 Phase 3: Advanced Analytics (Prioritet 2)
+
+### Revenue & Business Analytics
+- [ ] Revenue per course dashboard
+- [ ] Enrollment vs completion korrelation
+- [ ] Course profitability analysis (revenue - time invested)
+- [ ] Refund tracking og årsagsanalyse
+- [ ] Subscription churn analysis (for recurring payments)
+- [ ] Student LTV (Lifetime Value) beregning
+- [ ] Revenue forecasting baseret på trends
+
+### Instructor Analytics
+- [ ] Instructor performance dashboard
+- [ ] Course quality score (completion rate + ratings + engagement)
+- [ ] Response time tracking (Q&A, assignments)
+- [ ] Content creation metrics
+- [ ] Student satisfaction trends per instructor
+- [ ] Instructor sammenligning (anonymiseret benchmarking)
+
+### Predictive Analytics
+- [ ] Course completion prediction (ML-baseret)
+- [ ] Churn risk scoring per student
+- [ ] Recommended actions for at-risk students
+- [ ] Optimal email timing prediction
+- [ ] Success factor analysis
+
+### Goal Tracking & Alerts
+- [ ] Custom goal definition (e.g., "80% completion rate")
+- [ ] Alert system når goals ikke nås
+- [ ] Trend warnings (e.g., "completion rate faldende")
+- [ ] Slack/Discord/Email notifications
+- [ ] Goal dashboard med progress meters
+
+### Comparison Tools
+- [ ] Course vs course comparison
+- [ ] Period vs period (this month vs last month)
+- [ ] Cohort vs cohort analysis
+- [ ] Industry benchmarking (anonymiseret)
+
+---
+
+## 🔧 Phase 4: Integrations & Enterprise (Prioritet 3)
+
+### External Integrations
+- [ ] Google Analytics 4 event push
+- [ ] Segment.io integration
+- [ ] Mixpanel integration
+- [ ] BigQuery export
+- [ ] Slack notifications
+- [ ] Discord notifications
+- [ ] Microsoft Teams integration
+- [ ] HubSpot/Salesforce CRM sync
+
+### WooCommerce Integration
+- [ ] WooCommerce Subscriptions tracking
+- [ ] Renewal prediction
+- [ ] Payment failure handling
+- [ ] Upsell opportunity identification
+
+### Multi-site & Enterprise
+- [ ] Multisite network dashboard (aggregate stats)
+- [ ] Cross-site student tracking
+- [ ] White-label option
+- [ ] Custom branding
+- [ ] API rate limits per tier
+- [ ] SSO integration
+
+### Data & Privacy
+- [ ] GDPR data export per student
+- [ ] Data retention policies
+- [ ] Anonymized reporting mode
+- [ ] Audit log for admin actions
+
+### Import/Migration
+- [ ] LearnDash data import
+- [ ] LifterLMS data import
+- [ ] Generic CSV import
+- [ ] Historical data backfill
+
+---
+
+## 📝 Marketing (Pending)
+
+### Assets Needed
+- [ ] Screenshots til docs/screenshots/ (5+ views)
+- [ ] 2-min demo video
 - [ ] Tutor LMS Facebook group post
 - [ ] r/Wordpress post
-- [ ] ProductHunt launch forberedelse
-- [x] 10 relevante blogs til guest post/review outreach (docs/outreach/BLOG-OUTREACH-LIST.md)
-
-### Analytics
-- [x] Plausible på landing page (analytics.holstjensen.eu)
-- [x] Event tracking: demo_clicked, pricing_viewed, checkout_started
-- [x] License activation tracking i admin (TLAT_Activation_Tracking class + UI)
+- [ ] ProductHunt launch
 
 ---
-
-## 🎯 UI/UX Princip
-**Alle features SKAL være synlige og tilgængelige for brugeren!**
-- Backend-funktionalitet → tilføj også UI (knap, menu, side)
-- Ingen "skjulte" features — brugeren skal kunne finde og bruge det
-- Test at UI er responsiv og intuitiv
-
-
-## 🔧 Phase 3: Growth Features (Prioritet 3)
-
-### Advanced Features
-- [x] Webhooks til Zapier/Make (kursus fuldført, ny bruger, etc.) — admin UI at Tutor Stats → Webhooks, 7 events, HMAC signing, delivery logs
-- [ ] Scheduled email reports (ugentlig/månedlig PDF til admin)
-- [ ] Goal tracking (sæt mål for completion rate, alert ved afvigelse)
-- [ ] Multisite network dashboard
-
-### Integrations
-- [ ] WooCommerce Subscriptions integration (renewal tracking)
-- [ ] LearnDash data import (migrering fra konkurrent)
-- [ ] Google Analytics 4 event push
-- [ ] BigQuery export til enterprise kunder
-
-### Premium Tier
-- [ ] Definer "Pro" vs "Agency" features
-- [ ] White-label option for agencies ($299 LTD)
-- [ ] Priority support tier
-
----
-
-## 🎯 UI/UX Princip
-**Alle features SKAL være synlige og tilgængelige for brugeren!**
-- Backend-funktionalitet → tilføj også UI (knap, menu, side)
-- Ingen "skjulte" features — brugeren skal kunne finde og bruge det
-- Test at UI er responsiv og intuitiv
-
 
 ## 📝 Notes
 
-**Licensserver:** `/repos/tlat-license-server/`
+**Licensserver:** `/repos/tlat-license-server/` — LIVE på licenses.holstjensen.eu
 **Key format:** `TLAT-XXXX-XXXX-XXXX-XXXX`
 **Grace period:** 14 dage offline tolerance
+**Stripe:** Payments aktive (LTD + Annual)
 
-<!-- Cleanup note: auto-45m duplicates removed 2026-02-13 - CSV export + CLI commands already in Completed -->
+---
+
+## Testing Checklist
+
+Før hver release, verificer:
+- [ ] Alle PHP filer syntax check (`find . -name "*.php" -exec php -l {} \;`)
+- [ ] PHPUnit tests passes
+- [ ] Docker test med Tutor LMS Free
+- [ ] Manuel test i browser (alle admin sider)
+- [ ] Licens aktivering/deaktivering
+- [ ] Export funktioner (CSV, JSON)
+- [ ] Chart.js visualiseringer
+- [ ] Responsive design på tablet
