@@ -91,8 +91,8 @@
 ### Marketing Assets
 - [ ] Screenshots til docs/screenshots/ (min 5 forskellige views)
 - [ ] 2-min demo video (screen recording + voiceover)
-- [ ] Feature comparison table (Free vs Pro hvis relevant)
-- [ ] Pricing page med FAQ
+- [x] Feature comparison table (TLAT vs native Tutor LMS) — added to landing page with 9 feature comparisons
+- [x] Pricing page med FAQ — integrated in landing page (id="pricing" + id="faq" sections)
 
 ### Launch Outreach
 - [ ] Tutor LMS Facebook group post
