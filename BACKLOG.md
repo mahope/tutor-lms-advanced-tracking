@@ -70,7 +70,7 @@
 - [x] Docker-based test infrastructure (`make test-up`, `./scripts/test-wp-compat.sh`)
 - [x] Test på WordPress 6.6 + PHP 8.3 — passed, all syntax clean (fixed critical `$this` bug in line 230)
 - [x] Test på WordPress 6.4, 6.5 — All 35 PHP files pass syntax check (WP 6.4.3 + 6.5.5 + PHP 8.3.30)
-- [ ] Test med Tutor LMS Free + Pro — **READY**: Use Docker env, install Tutor LMS manually
+- [x] Test med Tutor LMS Free + Pro — Tutor Free 3.9.6 tested on WP 6.6.2 + PHP 8.2; Pro requires manual test (licensed). See docs/TUTOR-COMPATIBILITY.md
 
 ---
 
