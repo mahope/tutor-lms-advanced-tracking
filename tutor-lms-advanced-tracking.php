@@ -226,8 +226,7 @@ class TutorAdvancedTracking {
         }
         
         // Create any necessary database tables or options
-        $this
-
+        
         // Ensure custom events tables exist
         if (!class_exists('TutorAdvancedTracking_EventsDB')) {
             require_once TUTOR_ADVANCED_TRACKING_PLUGIN_DIR . 'includes/class-events-db.php';
