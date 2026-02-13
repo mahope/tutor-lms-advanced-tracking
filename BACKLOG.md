@@ -84,7 +84,7 @@
 
 ### Sales Infrastructure
 - [x] Landing page på tutor-tracking.com (Next.js eller WordPress) — `landing-page/` folder, Next.js 15 + Tailwind v4, Dockerfile ready. Deploy til Dokploy og opdater Stripe checkout links.
-- [ ] Stripe checkout integration (LTD + Annual options)
+- [x] Stripe checkout integration (LTD + Annual options) — Payment Links created: LTD €99 + Annual €15/yr, redirects to license server success page
 - [ ] License delivery email (SendGrid/Resend)
 - [ ] Customer portal: se licenser, download, support
 
