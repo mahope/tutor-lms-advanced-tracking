@@ -149,3 +149,8 @@
 **Grace period:** 14 dage offline tolerance
 
 <!-- Cleanup note: auto-45m duplicates removed 2026-02-13 - CSV export + CLI commands already in Completed -->
+
+<!-- auto-45m 2026-02-13 01:45 -->
+- [ ] [auto-45m] Skitser CSV-eksport felter + kolonne-mapping
+- [ ] [auto-45m] Tilfoej CLI-kommando: wp tlat export --course=<id>
+- [ ] [auto-45m] Skriv testplan for kompatibilitet (Tutor/WordPress/PHP)
