@@ -19,6 +19,7 @@ export default function Home() {
             <a href="#pricing" className="text-gray-600 hover:text-gray-900 transition">Pricing</a>
             <a href="#faq" className="text-gray-600 hover:text-gray-900 transition">FAQ</a>
             <a href="https://docs.tutor-tracking.com" className="text-gray-600 hover:text-gray-900 transition">Docs</a>
+            <Link href="/portal" className="text-gray-600 hover:text-gray-900 transition">My Licenses</Link>
           </div>
           <a 
             href="#pricing" 
