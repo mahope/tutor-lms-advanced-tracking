@@ -126,6 +126,8 @@ class TutorAdvancedTracking {
             'includes/class-admin.php',
             'includes/class-engagement.php',
             'includes/class-cohort-analytics.php',
+            'includes/class-student-analytics.php',
+            'includes/class-quiz-analytics.php',
         );
         
         foreach ($required_files as $file) {
