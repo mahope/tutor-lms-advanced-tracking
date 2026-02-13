@@ -80,7 +80,7 @@
 - [x] Question effectiveness metrics (discrimination index)
 
 ### Engagement Analytics
-- [ ] Video watch completion rates (kræver video tracking)
+- [x] Video watch completion rates (kræver video tracking)
 - [ ] Assignment submission timeline
 - [ ] Login frequency og session-længde
 - [ ] Device/browser breakdown chart

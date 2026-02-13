@@ -37,11 +37,41 @@ class TutorAdvancedTracking_EventsDB {
             UNIQUE KEY course_date_metric (course_id, stat_date, metric),
             KEY stat_date (stat_date)
         ) {$charset_collate};";
+        // Video watch progress tracking
+        $video_table = $wpdb->prefix . 'tlat_video_progress';
+        $sql[] = "CREATE TABLE {$video_table} (
+            id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
+            user_id BIGINT UNSIGNED NOT NULL,
+            course_id BIGINT UNSIGNED NOT NULL DEFAULT 0,
+            lesson_id BIGINT UNSIGNED NOT NULL DEFAULT 0,
+            video_url VARCHAR(2048) NOT NULL,
+            video_provider VARCHAR(32) NOT NULL DEFAULT 'html5',
+            duration INT UNSIGNED NOT NULL DEFAULT 0,
+            watched_seconds INT UNSIGNED NOT NULL DEFAULT 0,
+            max_position INT UNSIGNED NOT NULL DEFAULT 0,
+            completion_pct DECIMAL(5,2) NOT NULL DEFAULT 0.00,
+            play_count INT UNSIGNED NOT NULL DEFAULT 1,
+            segments_watched LONGTEXT NULL,
+            created_at DATETIME NOT NULL,
+            updated_at DATETIME NOT NULL,
+            PRIMARY KEY (id),
+            UNIQUE KEY user_video (user_id, video_url(191), lesson_id),
+            KEY course_id (course_id),
+            KEY lesson_id (lesson_id),
+            KEY completion (completion_pct),
+            KEY provider (video_provider),
+            KEY updated (updated_at)
+        ) {$charset_collate};";
+
         foreach ($sql as $statement) { dbDelta($statement); }
     }
     public static function uninstall() {
         global $wpdb;
-        $tables = array($wpdb->prefix . 'tlat_events', $wpdb->prefix . 'tlat_agg_daily');
+        $tables = array(
+            $wpdb->prefix . 'tlat_events',
+            $wpdb->prefix . 'tlat_agg_daily',
+            $wpdb->prefix . 'tlat_video_progress',
+        );
         foreach ($tables as $t) { $wpdb->query("DROP TABLE IF EXISTS {$t}"); }
     }
 }

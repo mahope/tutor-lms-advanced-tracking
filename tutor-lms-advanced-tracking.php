@@ -128,6 +128,7 @@ class TutorAdvancedTracking {
             'includes/class-cohort-analytics.php',
             'includes/class-student-analytics.php',
             'includes/class-quiz-analytics.php',
+            'includes/class-video-analytics.php',
         );
         
         foreach ($required_files as $file) {
@@ -163,7 +164,8 @@ class TutorAdvancedTracking {
             'TutorAdvancedTracking_Admin',
             'TutorAdvancedTracking_Engagement',
             'TutorAdvancedTracking_CohortAnalytics',
-            'TutorAdvancedTracking_Funnel_Dashboard'
+            'TutorAdvancedTracking_Funnel_Dashboard',
+            'TutorAdvancedTracking_VideoAnalytics'
         );
         
         foreach ($components as $component) {
