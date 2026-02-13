@@ -79,6 +79,9 @@ class TutorAdvancedTracking {
         TLAT_License_Settings::init();
         TLAT_Activation_Tracking::init();
         
+        // Initialize webhooks system
+        TLAT_Webhooks::init();
+        
         // Initialize components
         $this->init_components();
         
@@ -104,6 +107,7 @@ class TutorAdvancedTracking {
             'includes/class-license-settings.php',
             'includes/class-update-checker.php',
             'includes/class-activation-tracking.php',
+            'includes/class-webhooks.php',
         );
         
         foreach ($required_files as $file) {
