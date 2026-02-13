@@ -81,6 +81,16 @@ class TutorAdvancedTracking_Admin {
             'tutor-advanced-stats-system',
             array($this, 'render_system_info_page')
         );
+
+        // Assignment Timeline submenu
+        add_submenu_page(
+            'tutor-advanced-stats',
+            __('Assignment Timeline', 'tutor-lms-advanced-tracking'),
+            __('Assignments', 'tutor-lms-advanced-tracking'),
+            'manage_options',
+            'tutor-advanced-stats-assignments',
+            array($this, 'render_assignment_timeline_page')
+        );
     }
     
     /**
@@ -254,6 +264,39 @@ class TutorAdvancedTracking_Admin {
      */
     public function render_system_info_page() {
         include TUTOR_ADVANCED_TRACKING_PLUGIN_DIR . 'templates/admin-system-info.php';
+    }
+
+    /**
+     * Render assignment timeline page
+     */
+    public function render_assignment_timeline_page() {
+        // Enqueue assignment analytics scripts
+        wp_enqueue_style(
+            'tutor-advanced-assignment-analytics',
+            TUTOR_ADVANCED_TRACKING_PLUGIN_URL . 'assets/css/assignment-analytics.css',
+            array(),
+            TUTOR_ADVANCED_TRACKING_VERSION
+        );
+
+        wp_enqueue_script(
+            'tutor-advanced-assignment-analytics',
+            TUTOR_ADVANCED_TRACKING_PLUGIN_URL . 'assets/js/assignment-analytics.js',
+            array('jquery', 'tutor-advanced-charts'),
+            TUTOR_ADVANCED_TRACKING_VERSION,
+            true
+        );
+
+        wp_localize_script('tutor-advanced-assignment-analytics', 'tutor_advanced_vars', array(
+            'api_url' => rest_url(),
+            'nonce' => wp_create_nonce('wp_rest'),
+            'strings' => array(
+                'loading' => __('Loading...', 'tutor-lms-advanced-tracking'),
+                'no_data' => __('No data available', 'tutor-lms-advanced-tracking'),
+                'error' => __('An error occurred', 'tutor-lms-advanced-tracking')
+            )
+        ));
+
+        include TUTOR_ADVANCED_TRACKING_PLUGIN_DIR . 'templates/admin-assignment-timeline.php';
     }
     
     /**

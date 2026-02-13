@@ -129,6 +129,7 @@ class TutorAdvancedTracking {
             'includes/class-student-analytics.php',
             'includes/class-quiz-analytics.php',
             'includes/class-video-analytics.php',
+            'includes/class-assignment-analytics.php',
         );
         
         foreach ($required_files as $file) {
@@ -165,7 +166,10 @@ class TutorAdvancedTracking {
             'TutorAdvancedTracking_Engagement',
             'TutorAdvancedTracking_CohortAnalytics',
             'TutorAdvancedTracking_Funnel_Dashboard',
-            'TutorAdvancedTracking_VideoAnalytics'
+            'TutorAdvancedTracking_VideoAnalytics',
+            'TutorAdvancedTracking_AssignmentAnalytics',
+            'TutorAdvancedTracking_StudentAnalytics',
+            'TutorAdvancedTracking_QuizAnalytics'
         );
         
         foreach ($components as $component) {
@@ -183,6 +187,17 @@ class TutorAdvancedTracking {
                     echo '</p></div>';
                 });
             }
+        }
+
+        // Initialize Student Analytics, Quiz Analytics, and Assignment Analytics
+        if (class_exists('TutorAdvancedTracking_StudentAnalytics')) {
+            new TutorAdvancedTracking_StudentAnalytics();
+        }
+        if (class_exists('TutorAdvancedTracking_QuizAnalytics')) {
+            new TutorAdvancedTracking_QuizAnalytics();
+        }
+        if (class_exists('TutorAdvancedTracking_AssignmentAnalytics')) {
+            new TutorAdvancedTracking_AssignmentAnalytics();
         }
     }
     
