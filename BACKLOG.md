@@ -101,8 +101,8 @@
 - [ ] 10 relevante blogs til guest post/review outreach
 
 ### Analytics
-- [ ] Plausible på landing page (analytics.holstjensen.eu)
-- [ ] Event tracking: demo_clicked, pricing_viewed, checkout_started
+- [x] Plausible på landing page (analytics.holstjensen.eu)
+- [x] Event tracking: demo_clicked, pricing_viewed, checkout_started
 - [ ] License activation tracking i admin
 
 ---
