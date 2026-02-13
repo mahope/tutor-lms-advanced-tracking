@@ -20,6 +20,14 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en">
+      <head>
+        {/* Plausible Analytics */}
+        <script
+          defer
+          data-domain="tutor-tracking.com"
+          src="https://analytics.holstjensen.eu/js/script.js"
+        />
+      </head>
       <body className="antialiased">{children}</body>
     </html>
   )

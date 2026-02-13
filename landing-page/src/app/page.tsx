@@ -1,4 +1,19 @@
+'use client'
+
 import Link from 'next/link'
+
+// Plausible event tracking
+declare global {
+  interface Window {
+    plausible?: (event: string, options?: { props?: Record<string, string> }) => void
+  }
+}
+
+const trackEvent = (event: string, props?: Record<string, string>) => {
+  if (typeof window !== 'undefined' && window.plausible) {
+    window.plausible(event, props ? { props } : undefined)
+  }
+}
 
 export default function Home() {
   return (
@@ -24,6 +39,7 @@ export default function Home() {
           </div>
           <a 
             href="#pricing" 
+            onClick={() => trackEvent('pricing_viewed', { source: 'header' })}
             className="bg-indigo-500 hover:bg-indigo-600 text-white px-5 py-2 rounded-lg font-medium transition"
           >
             Get Started
@@ -46,12 +62,14 @@ export default function Home() {
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
             <a 
               href="#pricing" 
+              onClick={() => trackEvent('pricing_viewed', { source: 'hero' })}
               className="bg-indigo-500 hover:bg-indigo-600 text-white px-8 py-4 rounded-xl font-semibold text-lg transition shadow-lg shadow-indigo-500/25"
             >
               Get Lifetime Access — €99
             </a>
             <a 
               href="#demo" 
+              onClick={() => trackEvent('demo_clicked')}
               className="border-2 border-gray-200 hover:border-gray-300 text-gray-700 px-8 py-4 rounded-xl font-semibold text-lg transition"
             >
               View Demo →
@@ -355,6 +373,7 @@ export default function Home() {
           <div className="text-center mt-8">
             <a 
               href="#pricing" 
+              onClick={() => trackEvent('pricing_viewed', { source: 'compare' })}
               className="inline-block bg-indigo-500 hover:bg-indigo-600 text-white px-8 py-3 rounded-xl font-semibold transition"
             >
               Upgrade Your Analytics →
@@ -445,6 +464,7 @@ export default function Home() {
               </ul>
               <a 
                 href="https://buy.stripe.com/dRmaEX2kJ016dGD2yi57W01" 
+                onClick={() => trackEvent('checkout_started', { plan: 'lifetime' })}
                 className="block w-full bg-indigo-500 hover:bg-indigo-600 text-white text-center py-4 rounded-xl font-semibold transition"
               >
                 Get Lifetime Access
@@ -487,6 +507,7 @@ export default function Home() {
               </ul>
               <a 
                 href="https://buy.stripe.com/9B6bJ1f7vcNS9qn6Oy57W02" 
+                onClick={() => trackEvent('checkout_started', { plan: 'annual' })}
                 className="block w-full border-2 border-gray-200 hover:border-indigo-500 text-gray-700 hover:text-indigo-600 text-center py-4 rounded-xl font-semibold transition"
               >
                 Start Annual Plan
@@ -576,6 +597,7 @@ export default function Home() {
           </p>
           <a 
             href="#pricing" 
+            onClick={() => trackEvent('pricing_viewed', { source: 'final_cta' })}
             className="inline-block bg-indigo-500 hover:bg-indigo-600 text-white px-10 py-4 rounded-xl font-semibold text-lg transition shadow-lg shadow-indigo-500/25"
           >
             Get Started Today — €99 Lifetime
