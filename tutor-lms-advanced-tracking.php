@@ -77,6 +77,7 @@ class TutorAdvancedTracking {
         // Initialize license system
         TLAT_License_Validator::init();
         TLAT_License_Settings::init();
+        TLAT_Activation_Tracking::init();
         
         // Initialize components
         $this->init_components();
@@ -102,6 +103,7 @@ class TutorAdvancedTracking {
             'includes/class-license-validator.php',
             'includes/class-license-settings.php',
             'includes/class-update-checker.php',
+            'includes/class-activation-tracking.php',
         );
         
         foreach ($required_files as $file) {

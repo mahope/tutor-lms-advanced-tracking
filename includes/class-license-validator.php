@@ -439,6 +439,11 @@ if ( ! class_exists( 'TLAT_License_Validator' ) ) {
 			// Only start if not already in grace period
 			if ( ! get_option( self::OPTION_GRACE_START ) ) {
 				update_option( self::OPTION_GRACE_START, time() );
+
+				// Log grace period start
+				if ( class_exists( 'TLAT_Activation_Tracking' ) ) {
+					TLAT_Activation_Tracking::log_grace_start( self::GRACE_PERIOD_DAYS );
+				}
 			}
 		}
 
@@ -446,7 +451,15 @@ if ( ! class_exists( 'TLAT_License_Validator' ) ) {
 		 * End grace period (called when license becomes valid again)
 		 */
 		private static function end_grace_period(): void {
-			delete_option( self::OPTION_GRACE_START );
+			// Only log if we were actually in grace period
+			if ( get_option( self::OPTION_GRACE_START ) ) {
+				delete_option( self::OPTION_GRACE_START );
+
+				// Log grace period end (renewed)
+				if ( class_exists( 'TLAT_Activation_Tracking' ) ) {
+					TLAT_Activation_Tracking::log_grace_end( 'renewed' );
+				}
+			}
 		}
 
 		/**

@@ -165,6 +165,10 @@ if ( ! class_exists( 'TLAT_License_Settings' ) ) {
 					$result = TLAT_License_Validator::activate( $license_key );
 
 					if ( $result['success'] ) {
+						// Log successful activation
+						if ( class_exists( 'TLAT_Activation_Tracking' ) ) {
+							TLAT_Activation_Tracking::log_activation( $license_key, $result );
+						}
 						add_settings_error(
 							'tlat_license',
 							'activated',
@@ -172,6 +176,10 @@ if ( ! class_exists( 'TLAT_License_Settings' ) ) {
 							'success'
 						);
 					} else {
+						// Log failed activation
+						if ( class_exists( 'TLAT_Activation_Tracking' ) ) {
+							TLAT_Activation_Tracking::log_failure( $license_key, $result['message'] ?? 'Unknown error' );
+						}
 						add_settings_error(
 							'tlat_license',
 							'activation_failed',
@@ -182,9 +190,15 @@ if ( ! class_exists( 'TLAT_License_Settings' ) ) {
 					break;
 
 				case 'deactivate':
+					// Get license key before deactivation for logging
+					$current_key = get_option( TLAT_License_Validator::OPTION_KEY, '' );
 					$result = TLAT_License_Validator::deactivate();
 
 					if ( $result['success'] ) {
+						// Log deactivation
+						if ( class_exists( 'TLAT_Activation_Tracking' ) && ! empty( $current_key ) ) {
+							TLAT_Activation_Tracking::log_deactivation( $current_key );
+						}
 						add_settings_error(
 							'tlat_license',
 							'deactivated',
@@ -517,6 +531,13 @@ if ( ! class_exists( 'TLAT_License_Settings' ) ) {
 						</p>
 						<?php endif; ?>
 					</div>
+
+					<!-- Activation History -->
+					<?php if ( class_exists( 'TLAT_Activation_Tracking' ) ) : ?>
+					<div class="tlat-license-box">
+						<?php echo TLAT_Activation_Tracking::render_history_ui(); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped ?>
+					</div>
+					<?php endif; ?>
 
 					<!-- Advanced Settings (collapsible) -->
 					<details class="tlat-license-box">
