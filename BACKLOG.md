@@ -63,20 +63,20 @@
 > **Mål:** Gør pluginnet til den mest dybdegående analytics-løsning for Tutor LMS
 
 ### Student Progress Analytics
-- [ ] Individual student progress dashboard (`Tutor Stats → Students → [Student]`)
-- [ ] Time spent tracking per lesson og kursus (track start/end timestamps)
-- [ ] Engagement score beregning (baseret på aktivitet, quiz scores, completion)
-- [ ] At-risk student identificering (ingen aktivitet i X dage, lav progression)
-- [ ] Student timeline view (kronologisk aktivitetslog per elev)
+- [x] Individual student progress dashboard (`Tutor Stats → Students → [Student]`)
+- [x] Time spent tracking per lesson og kursus (track start/end timestamps)
+- [x] Engagement score beregning (baseret på aktivitet, quiz scores, completion)
+- [x] At-risk student identificering (ingen aktivitet i X dage, lav progression)
+- [x] Student timeline view (kronologisk aktivitetslog per elev)
 - [ ] Student sammenligning (sammenlign flere elevers progression)
 
 ### Quiz & Assessment Analytics
-- [ ] Per-question analytics (hvilke spørgsmål er sværest)
+- [x] Per-question analytics (hvilke spørgsmål er sværest)
 - [ ] Answer pattern heatmap (hvad svarer folk forkert)
 - [ ] Time spent per question tracking
-- [ ] Retry/forsøg tracking med score-forbedring
-- [ ] Score distribution histogram per quiz
-- [ ] Quiz difficulty scoring (automatisk baseret på fail rates)
+- [x] Retry/forsøg tracking med score-forbedring
+- [x] Score distribution histogram per quiz
+- [x] Quiz difficulty scoring (automatisk baseret på fail rates)
 - [ ] Question effectiveness metrics (discrimination index)
 
 ### Engagement Analytics
