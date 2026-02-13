@@ -83,7 +83,7 @@
 ## 📈 Phase 2: Launch & Marketing (Prioritet 2)
 
 ### Sales Infrastructure
-- [ ] Landing page på tutor-tracking.com (Next.js eller WordPress)
+- [x] Landing page på tutor-tracking.com (Next.js eller WordPress) — `landing-page/` folder, Next.js 15 + Tailwind v4, Dockerfile ready. Deploy til Dokploy og opdater Stripe checkout links.
 - [ ] Stripe checkout integration (LTD + Annual options)
 - [ ] License delivery email (SendGrid/Resend)
 - [ ] Customer portal: se licenser, download, support
